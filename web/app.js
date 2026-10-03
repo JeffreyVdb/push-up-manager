@@ -91,7 +91,7 @@ function setNumber(el, value) {
   const previous = el.textContent;
   if (previous === next) return;
   setText(el, next);
-  if (!/^\d+$/.test(previous)) return;
+  if (!/^[\d,]+$/.test(previous)) return;
   move(el, [
     { transform: "translateY(-.18em) scaleY(1.12)", filter: "blur(1px)", opacity: .45 },
     { transform: "none", filter: "blur(0)", opacity: 1 },
@@ -195,6 +195,17 @@ function toast(msg) {
 const MONTHS = ["January","February","March","April","May","June",
   "July","August","September","October","November","December"];
 const WEEKDAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+// Band title for the displayed month. "Current" is the server's today, not
+// state.cal, so the title cannot claim "this month" for a month already over.
+function calTitle(total, year, month, today) {
+  const [ty, tm] = today.split("-").map(Number);
+  let label = "this month";
+  if (year !== ty || month !== tm) {
+    label = `in ${MONTHS[month - 1]}${year === ty ? "" : ` ${year}`}`;
+  }
+  return { count: total.toLocaleString("en-US"), label };
+}
 
 // Parse a YYYY-MM-DD as a local date, avoiding the UTC shift of new Date(str).
 function parseDay(s) {
@@ -926,6 +937,11 @@ async function loadCalendar() {
 
   // The label is a live region: writing the same month re-announces it.
   setText($("cal-label"), `${MONTHS[res.month - 1]} ${res.year}`);
+
+  // Same response as the grid below, so title and cells never disagree.
+  const title = calTitle(res.month_total, res.year, res.month, res.today);
+  setNumber($("cal-count"), title.count);
+  setText($("cal-count-label"), title.label);
 
   const totals = new Map(res.totals.map((t) => [t.day, t.total]));
   const peak = res.totals.reduce((max, t) => Math.max(max, t.total), 0);

@@ -107,3 +107,15 @@ test('close totals no longer collapse into one heat bucket', () => {
   assert.equal(new Set(colors).size, colors.length);
   assert.equal(app.run('heatColor(0, 0)'), 'var(--heat-0)');
 });
+
+test('calendar band title reads this month, a month, or a month and year', () => {
+  const app = client();
+  const title = (total, year, month) => app.run(`JSON.stringify(calTitle(${total}, ${year}, ${month}, '2026-10-03'))`);
+  assert.deepEqual(JSON.parse(title(1240, 2026, 10)), { count: '1,240', label: 'this month' });
+  assert.deepEqual(JSON.parse(title(86, 2026, 3)), { count: '86', label: 'in March' });
+  assert.deepEqual(JSON.parse(title(12345, 2025, 3)), { count: '12,345', label: 'in March 2025' });
+  assert.deepEqual(JSON.parse(title(0, 2026, 10)), { count: '0', label: 'this month' });
+  assert.deepEqual(JSON.parse(title(0, 2026, 9)), { count: '0', label: 'in September' });
+  // Same month number in another year is not "this month".
+  assert.deepEqual(JSON.parse(title(5, 2027, 10)), { count: '5', label: 'in October 2027' });
+});

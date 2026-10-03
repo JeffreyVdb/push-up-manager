@@ -319,6 +319,11 @@ func (s *server) handleCalendar(w http.ResponseWriter, r *http.Request, sess *se
 		return
 	}
 
+	var monthTotal int64
+	for _, t := range totals {
+		monthTotal += t.Total
+	}
+
 	// Monday-first offset: Go's Sunday==0 becomes 6.
 	lead := (int(start.Weekday()) + 6) % 7
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -328,6 +333,8 @@ func (s *server) handleCalendar(w http.ResponseWriter, r *http.Request, sess *se
 		"lead_blank": lead,
 		"today":      today(),
 		"totals":     totals,
+		// Authoritative sum of totals, so the band title and grid share a source.
+		"month_total": monthTotal,
 	})
 }
 
