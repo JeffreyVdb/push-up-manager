@@ -482,6 +482,10 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
   background: linear-gradient(90deg, var(--heat-1), var(--heat-2) 40%, var(--heat-3) 70%, var(--heat-4));
 }
 
+.cal-title { min-width: 0; }
+.cal-count { font-size: 1.75rem; line-height: 1; letter-spacing: -.02em; display: inline-block; }
+.cal-count-label { font-size: 1rem; letter-spacing: .04em; color: var(--ash); }
+
 .monthnav { display: flex; align-items: center; gap: .25rem; }
 .monthlabel {
   font-family: var(--display);

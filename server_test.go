@@ -545,3 +545,52 @@ func TestBuildIDSubstitutedIntoAssets(t *testing.T) {
 		}
 	}
 }
+
+func TestCalendarMonthTotalBoundaries(t *testing.T) {
+	srv, _ := newTestServer(t)
+	c := newClient(t, srv)
+	c.register("lifter", "hunter2hunter2")
+	id := c.typeID("Standard")
+
+	log := func(day string, count int) {
+		t.Helper()
+		if status, _ := c.do("POST", "/api/reps", map[string]any{"type_id": id, "count": count, "day": day}); status != http.StatusOK && status != http.StatusCreated {
+			t.Fatalf("log %s: status %d", day, status)
+		}
+	}
+	monthTotal := func(year, month int) float64 {
+		t.Helper()
+		status, body := c.do("GET", fmt.Sprintf("/api/calendar?year=%d&month=%d", year, month), nil)
+		if status != http.StatusOK {
+			t.Fatalf("calendar %d-%d: status %d", year, month, status)
+		}
+		return body["month_total"].(float64)
+	}
+
+	// Empty month reads zero.
+	if got := monthTotal(2024, 2); got != 0 {
+		t.Errorf("empty month: want 0, got %v", got)
+	}
+
+	// February 2024 is a leap month: 1st and 29th count, the edge days of the
+	// neighbouring months must not.
+	log("2024-01-31", 1000)
+	log("2024-02-01", 10)
+	log("2024-02-01", 5)
+	log("2024-02-15", 20)
+	log("2024-02-29", 7)
+	log("2024-03-01", 2000)
+
+	if got := monthTotal(2024, 2); got != 42 {
+		t.Errorf("february: want 42, got %v", got)
+	}
+	if got := monthTotal(2024, 1); got != 1000 {
+		t.Errorf("january: want 1000, got %v", got)
+	}
+	if got := monthTotal(2024, 3); got != 2000 {
+		t.Errorf("march: want 2000, got %v", got)
+	}
+	if got := monthTotal(2024, 4); got != 0 {
+		t.Errorf("april: want 0, got %v", got)
+	}
+}
