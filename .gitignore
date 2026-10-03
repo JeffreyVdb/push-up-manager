@@ -1,0 +1,44 @@
+# Build output
+/pushup-counter
+/pushups
+
+# SQLite databases (incl. WAL sidecars)
+*.db
+*.db-shm
+*.db-wal
+
+# Go
+*.test
+*.out
+/coverage.*
+
+# Editors / OS
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Local secrets and credentials
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+secrets.*
+
+# Local data, backups, logs, and tooling state
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm
+*.db-*
+*.bak
+*.backup
+*.log
+.impeccable/

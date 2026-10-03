@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en" data-build="__BUILD__">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<title>Push-Up Counter</title>
+<meta name="description" content="Log push-up sets by variation and day. No zero days.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#070807">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Push-Ups">
+<link rel="preload" href="/fonts/bigshoulders.woff2?v=__BUILD__" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/archivo.woff2?v=__BUILD__" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/app.css?v=__BUILD__">
+</head>
+<body>
+
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+    <symbol id="i-out" viewBox="0 0 24 24"><path d="M14 5H6v14h8M17 12H10M14 9l3 3-3 3"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M20 12H5M11 6l-6 6 6 6"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12l6 6L20 6"/></symbol>
+    <symbol id="i-userout" viewBox="0 0 24 24"><path d="M15 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M12 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0M16 11h6"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M14 20v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M11 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0M17 13a4 4 0 0 1 3 3v4M16 3.5a4 4 0 0 1 0 7"/></symbol>
+  </defs>
+</svg>
+
+<!-- ============ AUTH ============ -->
+<main id="gate" class="gate" hidden>
+  <div class="gate-inner">
+    <h1 class="wordmark">PUSH<span>/</span>UP<br>COUNTER</h1>
+    <p class="gate-line">Reps get logged or they did not happen.</p>
+
+    <form id="auth-form" class="stack" novalidate>
+      <div class="tabs" role="tablist" aria-label="Account">
+        <button type="button" class="tab is-on" role="tab" aria-selected="true" data-mode="login">SIGN IN</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-mode="register">CREATE</button>
+      </div>
+
+      <label class="field">
+        <span class="field-label">Username</span>
+        <input id="auth-user" name="username" type="text" autocomplete="username"
+               autocapitalize="none" spellcheck="false" required minlength="3" maxlength="32">
+      </label>
+
+      <label class="field">
+        <span class="field-label">Password</span>
+        <input id="auth-pass" name="password" type="password" autocomplete="current-password"
+               required minlength="8" maxlength="256">
+        <small class="hint" id="pass-hint">At least 8 characters. No email, no reset — remember it.</small>
+      </label>
+
+      <p id="auth-error" class="alert" role="alert" hidden></p>
+      <button id="auth-submit" class="btn btn-primary btn-lg" type="submit">SIGN IN</button>
+    </form>
+  </div>
+</main>
+
+<!-- ============ APP ============ -->
+<div id="app" hidden>
+  <div class="chrome">
+    <header class="topbar">
+      <h1 class="wordmark wordmark-sm"><a href="/">PUSH<span>/</span>UP</a></h1>
+      <nav class="viewnav" role="tablist" aria-label="Section">
+        <button id="nav-log" class="vtab is-on" type="button" role="tab" data-view="log"
+                aria-selected="true" aria-controls="view-log">LOG</button>
+        <button id="nav-crew" class="vtab" type="button" role="tab" data-view="crew"
+                aria-selected="false" aria-controls="view-crew">CREW<span id="nav-badge" class="badge tnum" hidden></span></button>
+      </nav>
+      <div class="topbar-right">
+        <span class="who" id="who"></span>
+        <button id="logout" class="btn btn-ghost btn-icon" type="button" title="Sign out" aria-label="Sign out">
+          <svg class="ico" aria-hidden="true"><use href="#i-out"></use></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Friend requests are announced wherever you are in the app, not only on
+         the crew screen, because an unanswered one is the sender waiting: the
+         block inserts itself into the chrome and pushes the page down, and a
+         person waiting on an answer is what a polite announcement is for. What
+         speaks is the hidden sentence that follows, not this section — a live
+         region around the whole banner reads out the buttons as part of the
+         news, and speaks again whenever a row changes under it. It sits outside
+         the section for a second reason: a live region inside a hidden block is
+         not in the tree to speak when the block is revealed. -->
+    <p id="req-say" class="sr-only" role="status" aria-live="polite"></p>
+    <section id="requests" class="requests" aria-labelledby="h-req" hidden>
+      <h2 id="h-req" class="req-title">FRIEND REQUEST<span id="req-count" class="req-count tnum"></span></h2>
+      <ul id="request-list" class="reqlist"></ul>
+    </section>
+  </div>
+
+  <main class="sheet">
+   <div id="view-log" role="tabpanel" aria-labelledby="nav-log" tabindex="-1">
+    <!-- Stats -->
+    <section class="band" aria-labelledby="h-stats">
+      <h2 id="h-stats" class="band-title">STANDING</h2>
+      <dl class="stats">
+        <div class="stat"><dt>Today</dt><dd id="s-today" class="num">&middot;</dd></div>
+        <div class="stat"><dt>7 days</dt><dd id="s-week" class="num">&middot;</dd></div>
+        <div class="stat"><dt>Month</dt><dd id="s-month" class="num">&middot;</dd></div>
+        <div class="stat"><dt>Streak</dt><dd id="s-streak" class="num">&middot;</dd></div>
+      </dl>
+      <p class="band-foot">All time <b id="s-all" class="tnum">&middot;</b> &middot; Best day <b id="s-best" class="tnum">&middot;</b></p>
+    </section>
+
+    <!-- Calendar -->
+    <section class="band" aria-labelledby="h-cal">
+      <div class="band-head">
+        <h2 id="h-cal" class="band-title">THE MONTH</h2>
+        <div class="monthnav">
+          <button id="cal-prev" class="btn btn-ghost btn-icon" type="button" aria-label="Previous month">
+            <svg class="ico" aria-hidden="true"><use href="#i-left"></use></svg>
+          </button>
+          <strong id="cal-label" class="monthlabel" aria-live="polite"></strong>
+          <button id="cal-next" class="btn btn-ghost btn-icon" type="button" aria-label="Next month">
+            <svg class="ico" aria-hidden="true"><use href="#i-right"></use></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="calendar-viewport">
+      <table class="cal" id="cal">
+        <caption class="sr-only">Push-ups logged per day</caption>
+        <thead>
+          <tr>
+            <th scope="col"><abbr title="Monday">M</abbr></th>
+            <th scope="col"><abbr title="Tuesday">T</abbr></th>
+            <th scope="col"><abbr title="Wednesday">W</abbr></th>
+            <th scope="col"><abbr title="Thursday">T</abbr></th>
+            <th scope="col"><abbr title="Friday">F</abbr></th>
+            <th scope="col"><abbr title="Saturday">S</abbr></th>
+            <th scope="col"><abbr title="Sunday">S</abbr></th>
+          </tr>
+        </thead>
+        <tbody id="cal-body"></tbody>
+      </table>
+      </div>
+
+      <p class="legend">
+        <span>Cold</span>
+        <span class="heat-scale" aria-hidden="true"></span>
+        <span>Hot</span>
+      </p>
+    </section>
+
+    <!-- Selected day -->
+    <section class="band" aria-labelledby="h-day">
+      <div class="band-head">
+        <h2 id="h-day" class="band-title">THE DAY</h2>
+        <button id="day-today" class="btn btn-ghost btn-sm" type="button" hidden>
+          <svg class="ico" aria-hidden="true"><use href="#i-back"></use></svg> TODAY
+        </button>
+      </div>
+      <p class="daylabel"><strong id="day-label"></strong><span id="day-total" class="daytotal tnum">&middot;</span></p>
+      <ul id="day-entries" class="entries"></ul>
+      <p id="day-empty" class="empty" hidden>NOTHING LOGGED. FIX IT.</p>
+    </section>
+
+    <!-- Variations -->
+    <section class="band" aria-labelledby="h-types">
+      <h2 id="h-types" class="band-title">VARIATIONS</h2>
+      <ul id="type-list" class="typelist"></ul>
+      <form id="type-form" class="row">
+        <label class="field field-grow">
+          <span class="sr-only">New push-up type</span>
+          <input id="type-name" type="text" maxlength="40" placeholder="Archer, decline, clap…" autocomplete="off">
+        </label>
+        <button class="btn btn-outline" type="submit">
+          <svg class="ico" aria-hidden="true"><use href="#i-plus"></use></svg> ADD
+        </button>
+      </form>
+      <p id="type-error" class="alert" role="alert" hidden></p>
+    </section>
+
+   </div><!-- /view-log -->
+
+   <div id="view-crew" role="tabpanel" aria-labelledby="nav-crew" tabindex="-1" hidden>
+    <!-- Leaderboard -->
+    <section class="band" aria-labelledby="h-board">
+      <div class="band-head board-head">
+        <h2 id="h-board" class="band-title">THE BOARD<span id="board-window" class="board-window"></span></h2>
+        <div class="periods" role="tablist" aria-label="Leaderboard window">
+          <button class="ptab is-on" type="button" role="tab" data-period="daily" aria-selected="true">TODAY</button>
+          <button class="ptab" type="button" role="tab" data-period="weekly" aria-selected="false">WEEK</button>
+          <button class="ptab" type="button" role="tab" data-period="monthly" aria-selected="false">MONTH</button>
+          <button class="ptab" type="button" role="tab" data-period="all_time" aria-selected="false">ALL TIME</button>
+        </div>
+      </div>
+      <ol id="board" class="board"></ol>
+      <p id="board-empty" class="empty" hidden>NOBODY TO BEAT. ADD SOMEONE BELOW.</p>
+    </section>
+
+    <!-- Friends -->
+    <section class="band" aria-labelledby="h-crew">
+      <h2 id="h-crew" class="band-title">THE CREW</h2>
+      <form id="friend-form" class="row">
+        <label class="field field-grow">
+          <span class="sr-only">Username to add</span>
+          <input id="friend-name" type="text" maxlength="32" placeholder="Add by username"
+                 autocomplete="off" autocapitalize="none" spellcheck="false">
+        </label>
+        <button class="btn btn-outline" type="submit">
+          <svg class="ico" aria-hidden="true"><use href="#i-plus"></use></svg> ADD
+        </button>
+      </form>
+      <p id="friend-error" class="alert" role="alert" hidden></p>
+
+      <ul id="friend-list" class="typelist"></ul>
+      <p id="friend-empty" class="empty" hidden>NO ONE ON YOUR LIST YET.</p>
+
+      <h3 id="h-sent" class="subhead" hidden>ASKED</h3>
+      <ul id="sent-list" class="typelist"></ul>
+    </section>
+   </div><!-- /view-crew -->
+
+    <div class="tail">NO ZERO DAYS.</div>
+  </main>
+
+  <!-- Opens the log sheet on mobile; the bar is always docked on desktop. -->
+  <button id="fab" class="fab" type="button" aria-label="Log a set" aria-expanded="false" aria-controls="log">
+    <svg class="ico ico-lg" aria-hidden="true"><use href="#i-plus"></use></svg>
+  </button>
+  <div id="scrim" class="scrim" hidden></div>
+
+  <!-- Log bar -->
+  <form id="log" class="logbar" role="dialog" aria-modal="true" aria-labelledby="log-title">
+    <div class="logbar-inner">
+      <div class="sheet-head">
+        <h2 id="log-title" class="band-title">LOG A SET</h2>
+        <button id="log-close" class="btn btn-ghost btn-icon" type="button" aria-label="Close">
+          <svg class="ico" aria-hidden="true"><use href="#i-close"></use></svg>
+        </button>
+      </div>
+      <div class="sheet-scroll">
+        <button id="type-trigger" class="type-trigger" type="button" role="combobox"
+                aria-haspopup="listbox" aria-expanded="false" aria-controls="type-listbox">
+          <span class="sr-only">Push-up variation</span>
+          <span id="type-current" class="type-current">Loading</span>
+          <svg class="ico" aria-hidden="true"><use href="#i-chevron"></use></svg>
+        </button>
+
+        <div class="logrow">
+          <div class="counter">
+            <label class="sr-only" for="reps">Reps</label>
+            <input id="reps" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4"
+                   enterkeyhint="done" autocomplete="off" value="20" aria-describedby="log-day">
+          </div>
+          <div class="quick">
+            <button type="button" class="qk" data-add="5">+5</button>
+            <button type="button" class="qk" data-add="10">+10</button>
+            <button type="button" class="qk" data-add="20">+20</button>
+            <button type="button" class="qk qk-wipe" data-clear="1" aria-label="Clear count">C</button>
+          </div>
+        </div>
+
+        <p id="log-error" class="alert alert-tight" role="alert" hidden></p>
+      </div>
+      <button id="log-submit" class="btn btn-primary btn-lg" type="submit">
+        LOG IT <span class="btn-sub" id="log-day">today</span>
+      </button>
+    </div>
+  </form>
+</div>
+
+<div id="type-picker" class="picker" hidden>
+  <div id="picker-panel" class="picker-panel">
+    <div class="picker-head">
+      <h2 id="picker-title" class="band-title">VARIATION</h2>
+      <button id="picker-close" class="btn btn-ghost btn-icon" type="button" aria-label="Close">
+        <svg class="ico" aria-hidden="true"><use href="#i-close"></use></svg>
+      </button>
+    </div>
+    <ul id="type-listbox" class="picker-list" role="listbox" aria-label="Push-up variation"></ul>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="/app.js?v=__BUILD__" defer></script>
+</body>
+</html>

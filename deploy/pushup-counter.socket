@@ -1,0 +1,14 @@
+[Unit]
+Description=Push-up counter listening socket
+Documentation=https://github.com/JeffreyVdb/push-up-manager
+
+[Socket]
+# systemd owns the listener, so the service does not need to be enabled:
+# the first connection to :5554 starts it.
+ListenStream=5554
+Accept=no
+# Keep the queue shallow; this is a single-user app.
+Backlog=64
+
+[Install]
+WantedBy=sockets.target

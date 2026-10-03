@@ -1,0 +1,52 @@
+[Unit]
+Description=Push-up counter web app
+Documentation=https://github.com/JeffreyVdb/push-up-manager
+Requires=pushup-counter.socket
+After=pushup-counter.socket
+
+[Service]
+# The binary sends READY=1 once the database is open and the handed-over
+# listener is being served, so systemd reports activating until it can serve.
+Type=notify
+NotifyAccess=main
+TimeoutStartSec=15s
+
+ExecStart=%h/.local/bin/pushup-counter
+WorkingDirectory=%h
+
+# systemd creates and owns the database directory:
+#   %S/pushup-counter -> ~/.local/state/pushup-counter
+StateDirectory=pushup-counter
+StateDirectoryMode=0700
+Environment=DB_PATH=%S/pushup-counter/pushups.db
+
+# The socket unit provides the listener; LISTEN_ADDR is only the fallback for
+# running the binary by hand.
+Environment=LISTEN_ADDR=:5554
+
+Restart=on-failure
+RestartSec=2s
+
+KillSignal=SIGTERM
+TimeoutStopSec=30s
+
+# Watchdog: the process pings at half this interval.
+WatchdogSec=60s
+
+UMask=0077
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pushup-counter
+
+# Hardening that actually applies to a --user unit: these are process/seccomp
+# restrictions, not filesystem namespacing (ProtectSystem= and PrivateTmp=
+# generally need privileges a user manager does not have).
+NoNewPrivileges=yes
+MemoryDenyWriteExecute=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+
+# No [Install] section on purpose: the socket is what gets enabled, and the
+# service is started on demand by the first connection.
