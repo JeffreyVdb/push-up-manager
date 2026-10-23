@@ -98,9 +98,13 @@ func openStore(path string) (*store, error) {
 		db.Close()
 		return nil, err
 	}
-	if _, err := db.Exec(schema); err != nil {
+	if _, err := db.Exec(schema + accountSchema + passkeySchema); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("apply schema: %w", err)
+	}
+	if err := applyOfflineSchema(db); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("apply offline schema: %w", err)
 	}
 	return &store{db: db}, nil
 }
@@ -278,6 +282,7 @@ func (s *store) lastUsedTypeID(ctx context.Context, userID int64) (int64, error)
 }
 
 type repEntry struct {
+	ClientID  string `json:"client_id,omitempty"`
 	ID        int64  `json:"id"`
 	TypeID    int64  `json:"type_id"`
 	TypeName  string `json:"type_name"`

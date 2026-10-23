@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -35,6 +36,8 @@ type server struct {
 	events *eventHub
 	// heartbeat is a field only so tests need not wait a quarter minute.
 	heartbeat time.Duration
+	accounts  *accountService
+	passkeys  *passkeyService
 }
 
 func newServer(st *store) *server {
@@ -50,6 +53,8 @@ func newServer(st *store) *server {
 		events:        newEventHub(),
 		heartbeat:     eventHeartbeat,
 	}
+	s.accounts = &accountService{store: st}
+	s.passkeys = newPasskeyService(st, os.Getenv("PUSHUP_PUBLIC_URL"))
 	s.buildID = assetsBuildID(sub)
 	s.rewriteBuildPlaceholders()
 	return s
@@ -92,6 +97,8 @@ func (s *server) rewriteBuildPlaceholders() {
 
 func (s *server) handler() http.Handler {
 	mux := http.NewServeMux()
+	s.registerAccountRoutes(mux)
+	s.registerPasskeyRoutes(mux)
 
 	mux.HandleFunc("GET /api/session", s.handleSession)
 	mux.HandleFunc("POST /api/register", s.handleRegister)
@@ -115,6 +122,7 @@ func (s *server) handler() http.Handler {
 	mux.HandleFunc("GET /api/day/{date}", s.auth(s.handleDay))
 	mux.HandleFunc("GET /api/calendar", s.auth(s.handleCalendar))
 	mux.HandleFunc("GET /api/overview", s.auth(s.handleOverview))
+	mux.HandleFunc("GET /api/offline", s.auth(s.handleOfflineSnapshot))
 
 	mux.HandleFunc("GET /api/events", s.auth(s.handleEvents))
 
@@ -253,6 +261,10 @@ func (s *server) auth(next func(http.ResponseWriter, *http.Request, *session)) h
 		sess := s.currentSession(r)
 		if sess == nil {
 			writeError(w, http.StatusUnauthorized, "not signed in")
+			return
+		}
+		if account := r.Header.Get("X-Account-ID"); account != "" && account != strconv.FormatInt(sess.UserID, 10) {
+			writeError(w, http.StatusUnauthorized, "Sign in to this account again.")
 			return
 		}
 		next(w, r, sess)

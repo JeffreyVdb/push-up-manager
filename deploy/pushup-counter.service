@@ -23,6 +23,9 @@ Environment=DB_PATH=%S/pushup-counter/pushups.db
 # The socket unit provides the listener; LISTEN_ADDR is only the fallback for
 # running the binary by hand.
 Environment=LISTEN_ADDR=:5554
+# Optional public URL and SMTP settings. Store only configuration here;
+# prefer PUSHUP_SMTP_PASSWORD_FILE pointing to a mode-0600 credential file.
+EnvironmentFile=-%h/.config/pushup-counter/environment
 
 Restart=on-failure
 RestartSec=2s

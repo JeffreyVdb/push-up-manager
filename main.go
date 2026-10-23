@@ -53,6 +53,12 @@ func main() {
 	defer store.Close()
 
 	app := newServer(store)
+	mailer, publicURL, err := accountMailFromEnv()
+	if err != nil {
+		slog.Error("account configuration", "err", err)
+		os.Exit(1)
+	}
+	app.accounts.mailer, app.accounts.publicURL = mailer, publicURL
 	srv := &http.Server{
 		Handler:           app.handler(),
 		ReadHeaderTimeout: 10 * time.Second,

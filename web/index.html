@@ -2,6 +2,7 @@
 <html lang="en" data-build="__BUILD__" data-theme="plant">
 <head>
 <meta charset="utf-8">
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Push-Up Counter</title>
 <meta name="description" content="Log push-up sets by variation and day. No zero days.">
@@ -39,6 +40,16 @@
 </svg>
 
 <!-- ============ AUTH ============ -->
+<main id="startup" class="gate" aria-labelledby="startup-title">
+  <div class="gate-inner">
+    <div class="gate-brand plant-only"><svg class="ico" aria-hidden="true"><use href="#i-leaf"></use></svg></div>
+    <h1 id="startup-title" class="wordmark"><span class="classic-only">PUSH<span>/</span>UP<br>COUNTER</span><span class="plant-only">Push-up<br>counter.</span></h1>
+    <p class="gate-line" role="status">Opening your log…</p>
+    <a class="btn btn-ghost" href="/">RELOAD</a>
+    <noscript><p>Enable JavaScript to open your log. Your saved sets stay on this device.</p></noscript>
+  </div>
+</main>
+
 <main id="gate" class="gate" hidden>
   <div class="gate-inner">
     <div class="gate-tools"><button class="btn btn-ghost btn-icon" type="button" data-open-settings aria-label="Settings"><svg class="ico" aria-hidden="true"><use href="#i-settings"></use></svg></button></div>
@@ -62,12 +73,42 @@
         <span class="field-label">Password</span>
         <input id="auth-pass" name="password" type="password" autocomplete="current-password"
                required minlength="8" maxlength="256">
-        <small class="hint" id="pass-hint">At least 8 characters. No email, no reset — remember it.</small>
+        <small class="hint" id="pass-hint">At least 8 characters. Add a recovery email in Settings after signing up.</small>
       </label>
 
       <p id="auth-error" class="alert" role="alert" hidden></p>
       <button id="auth-submit" class="btn btn-primary btn-lg" type="submit">SIGN IN</button>
     </form>
+    <div class="auth-alternatives">
+      <button id="passkey-login" class="btn btn-outline" type="button">SIGN IN WITH A PASSKEY</button>
+      <a class="btn btn-ghost" href="/forgot-password">FORGOT PASSWORD?</a>
+    </div>
+  </div>
+</main>
+
+<main id="recovery" class="gate" hidden>
+  <div class="gate-inner">
+    <h1 id="recovery-title" class="band-title">Reset your password</h1>
+    <p id="recovery-intro" class="settings-intro"></p>
+    <form id="recovery-form" class="stack">
+      <label id="recovery-email-field" class="field">
+        <span class="field-label">Verified email address</span>
+        <input id="recovery-email" name="email" type="email" autocomplete="email" maxlength="254" required>
+      </label>
+      <label id="recovery-password-field" class="field" hidden>
+        <span class="field-label">New password</span>
+        <input id="recovery-password" name="new-password" type="password" autocomplete="new-password" minlength="8" maxlength="256">
+        <small class="hint">At least 8 characters.</small>
+      </label>
+      <label id="recovery-repeat-field" class="field" hidden>
+        <span class="field-label">Confirm new password</span>
+        <input id="recovery-repeat" name="confirm-password" type="password" autocomplete="new-password" minlength="8" maxlength="256">
+      </label>
+      <p id="recovery-error" class="alert" role="alert" hidden></p>
+      <p id="recovery-status" class="hint" role="status" hidden></p>
+      <button id="recovery-submit" class="btn btn-primary btn-lg" type="submit">SEND RESET LINK</button>
+    </form>
+    <a class="btn btn-ghost recovery-back" href="/">BACK TO SIGN IN</a>
   </div>
 </main>
 
@@ -90,6 +131,15 @@
         </button>
       </div>
     </header>
+
+    <section id="email-prompt" class="account-prompt" aria-label="Account recovery" hidden>
+      <p>Add an email in Settings so you can reset your password if you forget it. It’s optional.</p>
+      <div class="account-actions">
+        <button id="email-prompt-settings" class="btn btn-outline" type="button">ADD EMAIL</button>
+        <button id="email-prompt-dismiss" class="btn btn-ghost" type="button">DON’T ASK AGAIN</button>
+      </div>
+      <p id="email-prompt-error" class="alert" role="alert" hidden></p>
+    </section>
 
     <!-- Friend requests are announced wherever you are in the app, not only on
          the crew screen, because an unanswered one is the sender waiting: the
@@ -309,8 +359,36 @@
   </label>
   <p id="theme-note" class="hint">Off for the plant-based theme. Saved on this browser.</p>
   <p id="theme-status" class="hint" role="status" hidden></p>
+  <div id="account-settings" hidden>
+    <section class="account-section" aria-labelledby="account-email-title">
+      <h3 id="account-email-title" class="band-title">Recovery email</h3>
+      <p id="account-email-status" class="hint" role="status">Loading account…</p>
+      <form id="account-email-form" class="stack">
+        <label class="field">
+          <span class="field-label">Email address (optional)</span>
+          <input id="account-email" name="email" type="email" autocomplete="email" maxlength="254" required>
+        </label>
+        <label class="field">
+          <span class="field-label">Current password</span>
+          <input id="account-password" name="current-password" type="password" autocomplete="current-password" maxlength="256" required>
+          <small class="hint">Confirm your password to change your recovery address.</small>
+        </label>
+        <div class="account-actions">
+          <button class="btn btn-primary" type="submit">SAVE &amp; VERIFY EMAIL</button>
+          <button id="account-email-resend" class="btn btn-outline" type="button" hidden>RESEND CONFIRMATION</button>
+          <button id="account-email-remove" class="btn btn-ghost" type="button" hidden>REMOVE EMAIL</button>
+        </div>
+      </form>
+      <p id="account-error" class="alert" role="alert" hidden></p>
+      <p id="account-status" class="hint" role="status" hidden></p>
+    </section>
+    <section id="account-passkeys" class="account-section" aria-label="Passkeys"></section>
+  </div>
 </dialog>
 
+<script src="/offline.js?v=__BUILD__" defer></script>
+<script src="/account.js?v=__BUILD__" defer></script>
+<script src="/passkeys.js?v=__BUILD__" defer></script>
 <script src="/app.js?v=__BUILD__" defer></script>
 </body>
 </html>

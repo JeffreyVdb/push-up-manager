@@ -132,7 +132,8 @@
 :where([data-theme="plant"]) .btn-icon:hover { background: var(--slab-2); }
 :where([data-theme="plant"]) .btn-sm { min-height: 48px; }
 :where([data-theme="plant"]) input[type="text"],
-:where([data-theme="plant"]) input[type="password"] { border-radius: 8px; background: var(--slab); }
+:where([data-theme="plant"]) input[type="password"],
+:where([data-theme="plant"]) input[type="email"] { border-radius: 8px; background: var(--slab); }
 :where([data-theme="plant"]) input::placeholder { color: var(--ash); }
 :where([data-theme="plant"]) .field-label { letter-spacing: 0; font-size: .8125rem; text-transform: none; }
 :where([data-theme="plant"]) .alert { border-radius: 8px; }
@@ -337,3 +338,24 @@
   :where([data-theme="plant"]) .monthnav { margin-left: auto; }
   :where([data-theme="plant"]) .stat + .stat { padding-left: .625rem; }
 }
+
+/* Account and connection controls inherit both existing themes. */
+.auth-alternatives { display: grid; gap: .75rem; margin-top: 1.25rem; }
+.auth-alternatives a, .recovery-back { text-decoration: none; }
+.recovery-back { margin-top: 1.5rem; }
+.account-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--rule); }
+.account-section .band-title { padding: 0; margin-bottom: .75rem; }
+.account-section > .hint { margin-bottom: 1.25rem; overflow-wrap: anywhere; }
+.account-section .alert { margin-top: 1rem; }
+.account-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.account-actions .btn { min-height: 48px; }
+.account-prompt { padding: .875rem max(1rem, calc((100vw - 72rem) / 2)); border-top: 1px solid var(--rule); background: var(--slab-2); }
+.account-prompt p { margin: 0 0 .5rem; max-width: 65ch; }
+.account-prompt .btn { font-size: .75rem; }
+.sync-status { padding: 1rem; background: var(--slab-2); color: var(--bone); border-bottom: 1px solid var(--rule); }
+.sync-status .btn { min-height: 48px; }
+.sync-status-list { margin: .75rem 0 0; padding-left: 1.25rem; }
+.sync-status-list li { margin-top: .75rem; overflow-wrap: anywhere; }
+.passkey-list { list-style: none; padding: 0; margin: 1rem 0; }
+.passkey-list li { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-block: .75rem; border-bottom: 1px solid var(--rule); overflow-wrap: anywhere; }
+.passkey-list li > span { min-width: 0; }

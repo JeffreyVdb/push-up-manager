@@ -14,6 +14,7 @@ const maxRepsPerEntry = 10000
 
 type sessionResponse struct {
 	Authenticated bool   `json:"authenticated"`
+	UserID        int64  `json:"user_id,omitempty"`
 	Username      string `json:"username,omitempty"`
 	CSRFToken     string `json:"csrf_token,omitempty"`
 	Today         string `json:"today"`
@@ -30,6 +31,7 @@ func (s *server) handleSession(w http.ResponseWriter, r *http.Request) {
 	}
 	if sess := s.currentSession(r); sess != nil {
 		resp.Authenticated = true
+		resp.UserID = sess.UserID
 		resp.Username = sess.Username
 		resp.CSRFToken = sess.CSRFToken
 	}
@@ -81,7 +83,7 @@ func (s *server) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusCreated, sessionResponse{
-		Authenticated: true, Username: username, CSRFToken: csrf, Today: today(), Build: s.buildID,
+		Authenticated: true, UserID: userID, Username: username, CSRFToken: csrf, Today: today(), Build: s.buildID,
 	})
 }
 
@@ -113,7 +115,7 @@ func (s *server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, sessionResponse{
-		Authenticated: true, Username: u.Username, CSRFToken: csrf, Today: today(), Build: s.buildID,
+		Authenticated: true, UserID: u.ID, Username: u.Username, CSRFToken: csrf, Today: today(), Build: s.buildID,
 	})
 }
 
@@ -220,9 +222,11 @@ func (s *server) handleDeleteType(w http.ResponseWriter, r *http.Request, sess *
 }
 
 type repsPayload struct {
-	TypeID int64  `json:"type_id"`
-	Count  int64  `json:"count"`
-	Day    string `json:"day"`
+	ClientID string `json:"client_id"`
+	UserID   int64  `json:"user_id"`
+	TypeID   int64  `json:"type_id"`
+	Count    int64  `json:"count"`
+	Day      string `json:"day"`
 }
 
 func (s *server) handleAddReps(w http.ResponseWriter, r *http.Request, sess *session) {
@@ -248,7 +252,23 @@ func (s *server) handleAddReps(w http.ResponseWriter, r *http.Request, sess *ses
 		return
 	}
 
-	entry, err := s.store.addReps(r.Context(), sess.UserID, in.TypeID, day, in.Count)
+	// The account guard prevents a second tab switching the shared session
+	// cookie while an offline queue is being replayed.
+	if in.ClientID != "" && (in.UserID != sess.UserID || len(in.ClientID) < 16 || len(in.ClientID) > 100) {
+		writeError(w, http.StatusConflict, "Sign in to the account that saved this set before syncing.")
+		return
+	}
+	var entry *repEntry
+	var err error
+	if in.ClientID != "" {
+		entry, err = s.store.addRepsOnce(r.Context(), sess.UserID, in.TypeID, day, in.Count, in.ClientID)
+	} else {
+		entry, err = s.store.addReps(r.Context(), sess.UserID, in.TypeID, day, in.Count)
+	}
+	if errors.Is(err, errReplayMismatch) {
+		writeError(w, http.StatusConflict, err.Error())
+		return
+	}
 	if errors.Is(err, sql.ErrNoRows) {
 		writeError(w, http.StatusNotFound, "That variation no longer exists. Pick another.")
 		return

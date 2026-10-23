@@ -13,7 +13,8 @@ pushup-counter: ELF 64-bit LSB executable, x86-64, statically linked, stripped
 
 ## What it does
 
-- Username + password accounts. No email, no verification, no reset.
+- Username + password accounts, optional verified recovery email, password
+  reset links, and passkey sign-in. Manage email and passkeys in Settings.
 - Multiple push-up variations per user. Four are seeded (Standard, Wide,
   Diamond, Incline); add, rename, and delete your own.
 - Log reps against a variation. **The day always defaults to today** and the
@@ -31,7 +32,54 @@ pushup-counter: ELF 64-bit LSB executable, x86-64, statically linked, stripped
   After five minutes away, the selected day resets to today. Draft reps stay
   intact. Calendar navigation, tab indicators and changing totals animate,
   with reduced-motion support.
-- Mobile-first, installable PWA with an offline app shell.
+- Mobile-first, installable PWA with offline logging and automatic sync.
+
+## Offline logging
+
+Sign in once while connected to prepare this device. Your log and variations
+are then available offline, including after closing and reopening the app.
+New sets are saved in IndexedDB before the form clears, retain their selected
+day, and appear immediately in your totals. The connection banner shows sets
+waiting to sync. Sync retries on reconnect, return to the app, and periodic
+refresh while it is open; reopen the app to sync if it was closed.
+
+Startup restores the saved log before checking the network, including when a
+connection stalls without reporting offline. A visible startup screen covers
+the initial local read and first sign-in check; the application never waits on
+a server timeout to display a prepared device's log. First-time service-worker
+activation does not reload or interrupt sign-in.
+
+Every queued set carries a unique operation ID. SQLite keeps a receipt so
+retrying after a dropped response or from another tab never adds a duplicate,
+even if the original entry has since been deleted. A variation removed on
+another device leaves the set waiting for you to reassign or explicitly discard.
+
+Cached records and pending sets belong to one account. Signing out locks offline
+access and preserves unsynced sets for that account's next sign-in. An expired
+session asks you to sign in before syncing. Clearing site data or uninstalling
+a browser can remove unsynced sets; allow browser storage for offline logging.
+Changing variations, crew and existing entries requires a connection. Offline
+dates advance from the last known server midnight until the server is reachable.
+
+## Account recovery and passkeys
+
+Accounts without an email see an optional suggestion to add one. **Don't ask
+again** is stored on the account and stays dismissed across devices and sign-ins.
+Adding or changing an email requires the current password and sends a
+confirmation link. A previous verified address remains usable until its
+replacement is confirmed. Only verified addresses can receive password resets.
+
+**Forgot password?** sends a link to `/reset-password`; it expires after 30
+minutes and works once. Resetting a password revokes all existing sessions.
+Confirmation links expire after 24 hours; resend them from Settings. Recovery
+tokens are hashed in SQLite and transported in URL fragments, never query
+strings. Public reset requests use a generic response to avoid exposing accounts.
+
+Settings also lets you add and remove named passkeys after confirming your
+password. Sign in using a fingerprint, face, device PIN or security key. Passkeys
+require user verification and a secure context. Use `http://localhost:5554` for
+development, or configure your public HTTPS domain; numeric IP addresses cannot
+be passkey relying parties. Changing that domain changes the passkey identity.
 
 ## Appearance and settings
 
@@ -73,6 +121,19 @@ LISTEN_ADDR=127.0.0.1:8080 ./pushup-counter
 | `LISTEN_ADDR` | `:5554` | Address to bind. **Ignored when systemd passes a socket.** |
 | `DB_PATH` | `$STATE_DIRECTORY/pushups.db`, else `$XDG_STATE_HOME/pushup-counter/pushups.db`, else `~/.local/state/pushup-counter/pushups.db` | SQLite database file |
 | `PUSHUP_SECURE_COOKIES` | unset | Set to `1` to mark the session cookie `Secure` (only once you are actually serving over HTTPS) |
+| `PUSHUP_PUBLIC_URL` | unset | Canonical HTTPS origin for email links and passkeys, e.g. `https://push-ups.vandenborne.co`. No path/query. Without this, passkeys work only on localhost. |
+| `PUSHUP_SMTP_HOST` | unset | SMTP host. Unset disables email delivery. |
+| `PUSHUP_SMTP_PORT` | `587` | `587` requires STARTTLS; `465` uses implicit TLS. |
+| `PUSHUP_SMTP_USER` | unset | SMTP username. |
+| `PUSHUP_SMTP_FROM` | unset | Sender email address. |
+| `PUSHUP_SMTP_PASSWORD_FILE` | unset | Read SMTP password from this file; preferred over an environment secret. |
+| `PUSHUP_SMTP_PASSWORD` | unset | Fallback SMTP password if no password file is configured. |
+
+Maileroo deployment uses `smtp.maileroo.com:587` and
+`push-ups@mailer.vandenborne.co` as sender and username. The companion
+`ansible-home` role configures the public URL, loads the password via systemd
+credentials, and stores it encrypted in SOPS on the controller. No SMTP secret
+belongs in this repository. Schema upgrades are additive and automatic.
 
 ## Deployment
 
@@ -137,7 +198,7 @@ windows in one query. Nobody outside that circle is ever counted.
 
 Service workers and PWA installation require a secure context. That means:
 
-- `http://localhost:5554` — full PWA: installable, offline app shell. ✅
+- `http://localhost:5554` — full PWA: installable, offline logging, passkeys. ✅
 - `http://192.168.x.y:5554` from your phone — works as an ordinary web app;
   the service worker will not register. ⚠️
 
@@ -170,9 +231,20 @@ HTTPS (Tailscale, a reverse proxy with a certificate, …) and set
 ```sh
 go test ./...          # API, auth, isolation, validation, assets, friends
 go vet ./...
-node --test tests/app.test.cjs  # date rollover, resume, week labels, heat ramp
+node --test tests/*.test.cjs   # dates, themes, offline queue, SW and passkeys
 go run ./tools/genicons   # redraw the app icons
 ```
+
+`tests/browser-flows.cjs` exercises real browser registration, permanent reminder
+dismissal, WebAuthn with a virtual authenticator, offline reload/sync, and recovery
+routes. Run a disposable test server on `http://localhost:5573`, then run
+`node tests/browser-flows.cjs` with Playwright available. It creates test accounts
+and sets. Optional environment variables: `PUSHUP_TEST_URL`, `PLAYWRIGHT_MODULE`,
+`CHROMIUM_PATH`, and `PUSHUP_SCREENSHOTS` (capture directory).
+
+`tests/browser-startup.cjs` uses the same options (default port `5574`) to check
+visible startup during a stalled connection, cached rendering before any API
+response, airplane-mode reload/logging, expired sessions and offline sign-out.
 
 Assets are embedded from `web/`. A build ID is derived at startup by hashing
 every embedded file, then substituted for the `__BUILD__` placeholder in
@@ -192,6 +264,10 @@ server.go        routing, embedded assets, cache headers, auth/CSRF middleware
 api.go           JSON handlers
 store.go         schema and every SQLite query
 auth.go          Argon2id hashing, sessions, cookies, validation
+account*.go      verified emails, recovery tokens, dismissal and rate limits
+mail.go          TLS SMTP delivery and account configuration
+passkeys.go      WebAuthn ceremonies and credential persistence
+offline.go       idempotent logging receipts and account snapshots
 server_test.go   API tests
 friends_test.go  friend request protocol and leaderboard scoping tests
 web/             the entire frontend (embedded)

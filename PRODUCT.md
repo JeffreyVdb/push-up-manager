@@ -34,14 +34,14 @@ Not a general fitness tracker. One movement, tracked honestly, with an interface
 
 ## Capabilities and Constraints
 
-- Username + password accounts. No email, no email verification, no password reset flow. *(Explicit user constraint.)*
+- Username + password accounts, optional confirmed recovery email and password reset links. Suggest adding an email to accounts without one; dismissing the suggestion is permanent for the account. Settings manages email confirmation and named passkeys, and passkeys support passwordless sign-in. *(Explicit user direction, 2026-10-23; supersedes the original no-email constraint.)*
 - Multiple user-defined push-up types; each user gets a starter set (Standard, Wide, Diamond, Incline) they can rename or delete.
 - Friends, added by username. A request must be accepted by its recipient; declining it locks the sender out of asking that person again for seven days. Removing a friend clears the history both ways, so either side can ask again immediately. *(Explicit user constraint.)*
 - One shared leaderboard over the signed-in user plus their accepted friends, for today, the current Monday–Sunday week, the current month, and all time. It never counts anybody outside that circle.
 - Reps are logged as entries against (type, day). The day always defaults to today; past days can be chosen. Future days are rejected.
 - Month calendar view showing per-day totals at a glance.
 - The server's date remains authoritative. Soft refresh at midnight, at least once a minute while visible, and on return keeps the calendar and leaderboard current. Returning after five minutes away selects today without clearing draft reps; live background updates preserve deliberate history browsing.
-- Must be mobile-friendly and a progressive web app (installable, offline app shell).
+- Must be mobile-friendly and a progressive web app. After an online sign-in, log sets offline even after reloading, retain their original day, and sync without duplicates on reconnect or reopening. Browser-local caches and pending sets are isolated by account; variations, crew and deletion of synced entries still require a connection. *(Offline logging requested 2026-10-23.)*
 - Service workers and PWA install require a secure context: full PWA behavior works on `localhost` and over HTTPS, and degrades to a plain web app over LAN HTTP.
 - Database lives in systemd's `StateDirectory` (`~/.local/state/pushup-counter/pushups.db`).
 

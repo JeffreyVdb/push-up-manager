@@ -22,7 +22,36 @@ const state = {
 
 /* ---------------------------------------------------------- api */
 
+let offlineUnavailable = "";
+const offlineChannel = window.BroadcastChannel ? new window.BroadcastChannel("pushup-offline") : null;
+const offline = window.OfflineLog ? new window.OfflineLog({
+  request: (method, path, body) => networkAPI(method, path, body),
+  changed: () => { renderSyncStatus().catch(() => {}); },
+  broadcast: (kind) => offlineChannel?.postMessage({ kind }),
+  sessionChanged: (session) => {
+    state.csrf = session.csrf_token;
+    state.username = session.username;
+  },
+}) : null;
+
 async function api(method, path, body) {
+  if (offline?.userID && !offlineUnavailable && method === "GET") {
+    if (path === "/api/session") {
+      await offline.refresh();
+      return offline.session();
+    }
+    const cached = await offline.read(path);
+    if (cached !== undefined) return cached;
+  }
+  const result = await networkAPI(method, path, body);
+  if (offline?.userID && !offlineUnavailable && method !== "GET" && /^\/api\/(types|reps|friends)(\/|$)/.test(path)) await offline.refresh();
+  return result;
+}
+
+async function networkAPI(method, path, body) {
+  // Airplane mode is already a definitive failure; do not wait for a fetch
+  // timeout. A reported online connection may still fail, so retain the timeout.
+  if (navigator.onLine === false) throw new Error("Offline. Your saved log is available. Reconnect to sync.");
   const opts = {
     method,
     headers: { Accept: "application/json" },
@@ -33,17 +62,24 @@ async function api(method, path, body) {
     opts.body = JSON.stringify(body);
   }
   if (method !== "GET" && state.csrf) opts.headers["X-CSRF-Token"] = state.csrf;
+  if (offline?.userID && !["/api/login", "/api/register", "/api/logout"].includes(path)) opts.headers["X-Account-ID"] = String(offline.userID);
+  // A dead connection must not indefinitely block retries or account actions.
+  const aborter = new AbortController();
+  opts.signal = aborter.signal;
+  const timeout = setTimeout(() => aborter.abort(), 12000);
 
   let res;
   try {
     res = await fetch(path, opts);
   } catch {
-    throw new Error("No connection to the server. Try again when you are back online.");
+    clearTimeout(timeout);
+    throw new Error("No connection to the server. Changes to variations, crew and existing entries need a connection.");
   }
   let data = null;
   if (res.status !== 204) {
     try { data = await res.json(); } catch { data = null; }
   }
+  clearTimeout(timeout);
   if (!res.ok) {
     const err = new Error((data && data.error) || `Request failed (${res.status}).`);
     err.status = res.status;
@@ -263,9 +299,7 @@ async function submitAuth(event) {
   try {
     const path = state.authMode === "register" ? "/api/register" : "/api/login";
     const res = await api("POST", path, { username, password });
-    state.csrf = res.csrf_token;
-    state.username = res.username;
-    state.today = res.today;
+    await adoptSession(res);
     $("auth-pass").value = "";
     await enterApp();
   } catch (err) {
@@ -276,8 +310,30 @@ async function submitAuth(event) {
   }
 }
 
+async function adoptSession(res) {
+  state.csrf = res.csrf_token;
+  state.username = res.username;
+  state.today = res.today;
+  state.types = [];
+  state.selectedTypeId = 0;
+  state.selectedDay = "";
+  offlineUnavailable = "";
+  if (offline) {
+    try { await offline.accept(res); }
+    catch (err) { offlineUnavailable = err.message; }
+  }
+}
+
 async function logout() {
   disconnectEvents();
+  window.AppAccount?.leave();
+  try {
+    if (!offlineUnavailable) await offline?.leave();
+    else if (offline) offline.userID = 0;
+  } catch {
+    toast("Cannot save sign-out on this device. Allow site storage or clear this site's data to sign out.");
+    return;
+  }
   try { await api("POST", "/api/logout"); } catch { /* sign out locally anyway */ }
   state.csrf = "";
   state.username = "";
@@ -490,6 +546,7 @@ function moveActive(delta) {
 }
 
 function chooseType(id) {
+  renderSyncStatus().catch(() => {});
   state.selectedTypeId = id;
   rememberType(id);
   renderTrigger();
@@ -736,11 +793,12 @@ async function submitLog(event) {
   btn.disabled = true;
   committing = true;
   try {
-    // Day is omitted when it is today; the server defaults to today anyway.
-    const body = { type_id: state.selectedTypeId, count };
-    if (state.selectedDay && state.selectedDay !== state.today) body.day = state.selectedDay;
-
-    const entry = await api("POST", "/api/reps", body);
+    // Persist the chosen date before attempting the network. A set retried
+    // tomorrow still belongs to the day on which it was logged.
+    const body = { type_id: state.selectedTypeId, count, day: state.selectedDay || state.today };
+    const entry = offline?.userID && !offlineUnavailable
+      ? await offline.enqueue(body, selectedType()?.name || "Push-ups")
+      : await api("POST", "/api/reps", body);
     showError($("log-error"), "");
     rememberType(entry.type_id);
     // Close first so the slam animation happens on a visible page.
@@ -748,10 +806,8 @@ async function submitLog(event) {
     // The other half of the gate: `committing` holds the next refresh off, but
     // one already in flight owns the loaders, and its older responses would
     // land after this commit's and put back what the set just changed. Only
-    // the loaders wait — the POST above already went out.
+    // the loaders wait — the set is already durably saved above.
     if (refreshRun) await refreshRun;
-    // A set submitted across midnight defaults to the server's new day.
-    if (!body.day) adoptToday(entry.day);
     // Settled, not Promise.all: all() rejects on the first loader to fail, so
     // `committing` cleared and the deferred refresh started while the other
     // four were still in flight. A loader that fails here only leaves the
@@ -761,10 +817,11 @@ async function submitLog(event) {
       loadDay(entry.day), loadCalendar(), loadStats(), loadTypes(), loadFriends(),
     ]));
     slam(entry.day);
-    toast(`+${entry.count} ${entry.type_name}`);
+    toast(`+${entry.count} ${entry.type_name}${entry.pending ? " · saved on this device" : ""}`);
+    if (entry.pending) scheduleRefresh();
     if (docked()) input.select();
   } catch (err) {
-    // Only the POST reaches here, and only a failed POST means no set landed.
+    // A durable write failure leaves the draft visible and unacknowledged.
     showError($("log-error"), err.message);
   } finally {
     btn.disabled = false;
@@ -856,7 +913,9 @@ async function loadDay(day) {
     const [count, name, time, del] = li.children;
     setText(count, String(e.count));
     // The name travels with the type, so a rename elsewhere lands here too.
-    setText(name, e.type_name);
+    setText(name, `${e.type_name}${e.pending ? (e.error ? " · needs attention" : " · waiting to sync") : ""}`);
+    del.disabled = Boolean(e.pending);
+    del.title = e.pending ? "Sync this entry before deleting it. Use the sync notice to resolve failed entries." : "Delete this entry";
     const at = new Date(e.created_at);
     setText(time, Number.isNaN(at.getTime())
       ? ""
@@ -866,6 +925,7 @@ async function loadDay(day) {
   }));
 
   markSelectedDay();
+  renderSyncStatus().catch(() => {});
 }
 
 /* ---------------------------------------------------------- calendar */
@@ -1636,7 +1696,14 @@ function drainPending() {
 async function enterApp() {
   $("gate").hidden = true;
   $("app").hidden = false;
+  $("startup").hidden = true;
   $("who").textContent = state.username;
+  window.AppAccount?.enter();
+  // Render an existing snapshot before doing any network work. Only a first
+  // sign-in needs to fetch the initial snapshot before loading its records.
+  const saved = offline?.userID && !offlineUnavailable && (await offline.account())?.snapshot;
+  if (offline?.userID && !offlineUnavailable && !saved) await offline.refresh();
+  renderSyncStatus().catch(() => {});
 
   const t = parseDay(state.today);
   state.cal = { year: t.getFullYear(), month: t.getMonth() + 1 };
@@ -1655,9 +1722,27 @@ async function enterApp() {
   if (docked() && window.matchMedia("(pointer: fine)").matches) {
     $("reps").focus({ preventScroll: true });
   }
+  if (saved) refreshAll();
 }
 
 function wire() {
+  window.AppAccount?.wire();
+  if (offlineChannel) offlineChannel.onmessage = async () => {
+    if (!offline?.userID) return;
+    try {
+      if (await offline.active() !== offline.userID) {
+        disconnectEvents();
+        window.AppAccount?.leave();
+        offline.userID = 0;
+        state.csrf = "";
+        state.username = "";
+        $("app").hidden = true;
+        $("gate").hidden = false;
+        setAuthMode("login");
+        showError($("auth-error"), "The account changed in another tab. Sign in to continue. Saved sets stay with their account.");
+      } else scheduleRefresh();
+    } catch { /* the next foreground refresh retries storage */ }
+  };
   const settings = $("settings");
   const themeToggle = $("classic-theme");
   themeToggle.checked = document.documentElement.dataset.theme === "classic";
@@ -1823,38 +1908,168 @@ function keepEditing(input) {
 }
 
 async function boot() {
-  wire();
   try {
-    const res = await api("GET", "/api/session");
+    wire();
+    if (window.AppAccount?.boot()) return;
+    let active;
+    try { active = await offline?.active(); }
+    catch (err) { offlineUnavailable = err.message; }
+    // Explicit local sign-out remains signed out even if its server request
+    // could not clear the HttpOnly session cookie while offline.
+    if (active === 0) {
+      $("gate").hidden = false;
+      setAuthMode("login");
+      return;
+    }
+    // A saved account is usable without a server round trip, even when the
+    // connection stalls while navigator.onLine still reports true. enterApp
+    // refreshes it in the background and handles expired sessions there.
+    let res = active && !offlineUnavailable ? await offline.restore() : null;
+    if (!res) res = await networkAPI("GET", "/api/session");
     state.today = res.today;
     if (res.authenticated) {
-      state.csrf = res.csrf_token;
-      state.username = res.username;
+      // Restoring offline data must not reset the saved server clock.
+      if (res.offline) {
+        state.csrf = res.csrf_token;
+        state.username = res.username;
+      } else await adoptSession(res);
       await enterApp();
     } else {
+      window.AppAccount?.leave();
       $("gate").hidden = false;
       setAuthMode("login");
     }
-  } catch {
+  } catch (err) {
+    $("app").hidden = true;
     $("gate").hidden = false;
     setAuthMode("login");
-    showError($("auth-error"), "Cannot reach the server. Check that it is running, then reload.");
+    showError($("auth-error"), err.message || "Connect and sign in once to prepare offline logging on this device.");
+  } finally {
+    $("startup").hidden = true;
+  }
+}
+
+let syncStatusGeneration = 0;
+async function renderSyncStatus() {
+  const generation = ++syncStatusGeneration;
+  const app = $("app");
+  if (!app) return;
+  let region = $("sync-status");
+  if (!region) {
+    region = document.createElement("section");
+    region.id = "sync-status";
+    region.className = "sync-status";
+    region.setAttribute("aria-label", "Offline logging and sync");
+    app.prepend(region);
+  }
+  const pending = offline?.userID && !offlineUnavailable ? await offline.pending() : [];
+  if (generation !== syncStatusGeneration) return;
+  region.hidden = !offlineUnavailable && (!offline?.userID || (offline.online && !pending.length && !offline.needsAuth));
+  if (region.hidden) return;
+  const text = document.createElement("p");
+  text.setAttribute("role", "status");
+  const count = `${pending.length} saved set${pending.length === 1 ? "" : "s"}`;
+  text.textContent = offlineUnavailable || (offline.needsAuth
+    ? `${offline.problem} ${count} stay on this device.`
+    : `${offline.online ? "" : "Offline. "}${pending.length ? `${count} ${offline.syncing ? "syncing" : "waiting to sync"}. ` : "Your saved log is available. "}Reconnect to sync. Variations, crew and deleting entries need a connection.`);
+  const children = [text];
+  if (!offlineUnavailable) {
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.className = "btn btn-outline";
+    retry.textContent = offline.needsAuth ? "SIGN IN TO SYNC" : "RETRY SYNC";
+    retry.disabled = Boolean(offline.syncing);
+    retry.addEventListener("click", () => {
+      if (offline.needsAuth) {
+        disconnectEvents();
+        window.AppAccount?.leave();
+        $("app").hidden = true;
+        $("gate").hidden = false;
+        $("auth-user").value = state.username;
+        setAuthMode("login");
+        $("auth-pass").focus();
+      } else refreshAll();
+    });
+    children.push(retry);
+    const blocked = pending.filter((entry) => entry.error);
+    if (blocked.length) {
+      const list = document.createElement("ul");
+      list.className = "sync-status-list";
+      for (const entry of blocked) {
+        const row = document.createElement("li");
+        const description = document.createElement("p");
+        description.textContent = `${entry.count} ${entry.type_name} · ${entry.day}: ${entry.error}`;
+        row.append(description);
+        if (entry.error_status === 404 && selectedType()) {
+          const fix = document.createElement("button");
+          fix.type = "button";
+          fix.className = "btn btn-outline";
+          fix.textContent = `USE ${selectedType().name.toUpperCase()}`;
+          const type = { ...selectedType() };
+          fix.addEventListener("click", async () => {
+            try { await offline.reassign(entry.client_id, type.id, type.name); await refreshAll(); }
+            catch (err) { toast(err.message); }
+          });
+          row.append(fix);
+        }
+        if (entry.error_status === 400 && entry.day > state.today && state.selectedDay <= state.today) {
+          const fixDay = document.createElement("button");
+          fixDay.type = "button";
+          fixDay.className = "btn btn-outline";
+          const day = state.selectedDay || state.today;
+          fixDay.textContent = `USE ${fmtDayShort(day).toUpperCase()}`;
+          fixDay.addEventListener("click", async () => {
+            try { await offline.changeDay(entry.client_id, day); await refreshAll(); }
+            catch (err) { toast(err.message); }
+          });
+          row.append(fixDay);
+        }
+        const discard = document.createElement("button");
+        discard.type = "button";
+        discard.className = "btn btn-ghost";
+        discard.textContent = "DISCARD SAVED SET";
+        discard.addEventListener("click", async () => {
+          if (!confirm(`Discard ${entry.count} ${entry.type_name} from ${entry.day}? This saved set will be permanently removed from this device.`)) return;
+          try { await offline.discard(entry.client_id); await refreshAll(); }
+          catch (err) { toast(err.message); }
+        });
+        row.append(discard);
+        list.append(row);
+      }
+      children.push(list);
+    }
+  }
+  // Avoid replacing the focused control during routine background refreshes.
+  const signature = children.map((child) => child.textContent).join("|") + Boolean(offline?.syncing);
+  if (region.dataset.signature !== signature) {
+    region.dataset.signature = signature;
+    region.replaceChildren(...children);
   }
 }
 
 if ("serviceWorker" in navigator) {
   // The shell is served cache-first, so a new build only reaches an open tab
-  // if the waiting worker is told to take over. This app holds no unsaved
-  // state, so it activates immediately and reloads once.
+  // if the waiting worker is told to take over. Outbox entries are durable;
+  // defer an update while a rep draft or account form is open.
   let reloading = false;
+  let controlled = Boolean(navigator.serviceWorker.controller);
   navigator.serviceWorker.addEventListener("controllerchange", () => {
+    // Claiming the first visit does not change its build. Reloading here can
+    // interrupt the first sign-in; only an upgrade of an existing worker needs it.
+    if (!controlled) { controlled = true; return; }
     if (reloading) return;
+    if ($("reps")?.value || $("auth-pass")?.value || document.querySelector("dialog[open]") || ["/reset-password", "/confirm-email"].includes(location.pathname)) {
+      toast("Update ready. It will load the next time you open the app.");
+      return;
+    }
     reloading = true;
     location.reload();
   });
 
   const takeOver = (worker) => {
-    if (worker && navigator.serviceWorker.controller) worker.postMessage({ type: "SKIP_WAITING" });
+    if (!worker || !navigator.serviceWorker.controller) return;
+    if ($("reps")?.value || $("auth-pass")?.value || document.querySelector("dialog[open]") || ["/reset-password", "/confirm-email"].includes(location.pathname)) return;
+    worker.postMessage({ type: "SKIP_WAITING" });
   };
 
   window.addEventListener("load", () => {
