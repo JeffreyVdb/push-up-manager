@@ -1,83 +1,278 @@
-# Design
+---
+name: Push-Up Counter — ROOTED
+description: A community garden visual world with the original tough-love voice.
+colors:
+  sage: "#edf3e7"
+  paper: "#fcfdf8"
+  sage-well: "#e1eadb"
+  sage-rule: "#c6d3bd"
+  forest-text: "#203d2e"
+  muted-leaf: "#52634e"
+  forest: "#356443"
+  deep-forest: "#264b32"
+  leaf-bar: "#648052"
+  rust-warning: "#9a3f24"
+  heat-empty: "#f0f3e9"
+  heat-shoot: "#e1ebcf"
+  heat-sprout: "#c4db9d"
+  heat-leaf: "#a0c479"
+  heat-full: "#80ae5f"
+  heat-text: "#20351d"
+  lavender: "#ece7f1"
+  plum: "#665270"
+  day-rule: "#cfc5d6"
+  day-muted: "#62546a"
+  selection: "#cadba9"
+  classic-ink: "#070807"
+  classic-slab: "#101311"
+  classic-slab-2: "#171b19"
+  classic-rule: "#2a302c"
+  classic-bone: "#efede6"
+  classic-ash: "#9aa29c"
+  classic-signal: "#ff4b12"
+  classic-deep: "#b32b06"
+  classic-mid: "#d13c0c"
+  classic-warn: "#ffc53d"
+  classic-heat-empty: "#141715"
+  classic-heat-cold: "#8caeb8"
+  classic-heat-mid: "#b7bf91"
+  classic-heat-warm: "#efbe62"
+  classic-heat-text: "#1a0a04"
+typography:
+  display:
+    fontFamily: '"Fraunces", Georgia, serif'
+    fontSize: "clamp(2.25rem, 4vw, 3.5rem)"
+    fontWeight: 500
+    lineHeight: 1.12
+    letterSpacing: "-.04em"
+  wordmark:
+    fontFamily: '"Fraunces", Georgia, serif'
+    fontSize: "clamp(3.5rem, 13vw, 4.75rem)"
+    fontWeight: 600
+    lineHeight: 1.03
+    letterSpacing: "-.04em"
+  title:
+    fontFamily: '"Fraunces", Georgia, serif'
+    fontSize: "1.25rem"
+    fontWeight: 500
+    letterSpacing: "-.02em"
+  number:
+    fontFamily: '"Fraunces", Georgia, serif'
+    fontSize: "2rem"
+    fontWeight: 500
+    lineHeight: 1
+    letterSpacing: "-.02em"
+  body:
+    fontFamily: '"Archivo", system-ui, -apple-system, sans-serif'
+    fontSize: ".9375rem"
+    lineHeight: 1.5
+  action:
+    fontFamily: '"Archivo", system-ui, -apple-system, sans-serif'
+    fontSize: ".75rem"
+    fontWeight: 600
+    letterSpacing: ".015em"
+  classic-display:
+    fontFamily: '"Big Shoulders", "Arial Narrow", sans-serif'
+    fontSize: "clamp(3rem, 16vw, 4.5rem)"
+    fontWeight: 900
+    lineHeight: .84
+    letterSpacing: "-.03em"
+rounded:
+  quick-key: "6px"
+  mobile-day: "7px"
+  control: "8px"
+  day: "10px"
+  picker: "12px"
+  panel: "16px"
+  log-pill: "28px"
+  circle: "50%"
+  classic: "0"
+spacing:
+  compact: ".5rem"
+  control: "1rem"
+  form: "1.25rem"
+  panel: "1.5rem"
+  mobile-section: "1.75rem"
+  section: "2rem"
+  desktop-gap: "2.5rem"
+components:
+  button-primary:
+    backgroundColor: "{colors.forest}"
+    textColor: "{colors.paper}"
+    typography: "{typography.action}"
+    rounded: "{rounded.control}"
+    padding: "0 1rem"
+  button-primary-hover:
+    backgroundColor: "{colors.deep-forest}"
+    textColor: "{colors.paper}"
+  button-outline:
+    textColor: "{colors.forest-text}"
+    typography: "{typography.action}"
+    rounded: "{rounded.control}"
+    padding: "0 1rem"
+  button-ghost:
+    textColor: "{colors.muted-leaf}"
+    typography: "{typography.action}"
+    rounded: "{rounded.control}"
+    padding: "0 1rem"
+  input:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.forest-text}"
+    rounded: "{rounded.control}"
+    padding: "0 .875rem"
+  calendar-panel:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.forest-text}"
+    rounded: "{rounded.panel}"
+    padding: "1.5rem"
+  selected-day-panel:
+    backgroundColor: "{colors.lavender}"
+    textColor: "{colors.forest-text}"
+    rounded: "{rounded.panel}"
+    padding: "1.5rem"
+  mobile-log:
+    backgroundColor: "{colors.forest}"
+    textColor: "{colors.paper}"
+    rounded: "{rounded.log-pill}"
+    height: "56px"
+    padding: "0 1.25rem"
+---
 
-## The world: FLOOR
+# Design System: Push-Up Counter
 
-The surface is the floor you are lying on at 5am, not a fitness dashboard. Concrete-dark, hard-edged, one signal colour that reads like a warning stripe. Nothing rounds off, nothing congratulates, nothing decorates. The interface is a piece of gym equipment: heavy, legible under bad light, indifferent to how you feel about it.
+## Overview
 
-Mode: **Operate**. The visitor is mid-set. The task wins over expression, and the brand lives in the type, the rules, and the numerals.
+**Creative North Star: "ROOTED — the community garden"**
 
-Chosen dark from the use scene, not from category habit: a phone at arm's length in a dim room, held by someone who just finished a set.
+ROOTED is the default plant-based visual world: a sage working surface, paper calendar, lavender selected day, forest actions, and a leaf beside a serif wordmark. The garden metaphor expresses repeated effort and visible accumulation. The interface remains a practical counter used between sets.
 
-## Palette
+The user explicitly kept the tough-love language. Botanical form and unsentimental commands coexist: “No zero days.”, “Reps get logged or they did not happen.” and `LOG IT` remain direct. This identity introduces no dietary, health, or performance claims.
 
-Tokens live in `web/app.css` on `:root`.
+The original FLOOR world remains a complete Classic theme: dark concrete, oxide orange, condensed display type, hard edges and stacked bands. `web/app.css` retains that system and shared behavior; `web/garden.css` scopes the new appearance to `data-theme="plant"`. New visual work must preserve that boundary.
 
-| Token | Value | Role |
-|---|---|---|
-| `--ink` | `#070807` | Page ground; the floor |
-| `--slab` | `#101311` | Raised working surface |
-| `--slab-2` | `#171B19` | Input wells, calendar cells with data |
-| `--rule` | `#2A302C` | Hairlines; the only separator |
-| `--bone` | `#EFEDE6` | Primary text |
-| `--ash` | `#9AA29C` | Secondary text, tinted from the surface hue — never neutral gray |
-| `--signal` | `#FF4B12` | Oxide orange. Action, today, the live number |
-| `--signal-deep` | `#B32B06` | Pressed actions |
-| `--warn` | `#FFC53D` | Errors and destructive confirmation |
+**Key Characteristics:**
 
-The calendar uses a continuous cool-to-hot ramp for logged days: `--heat-1` `#8CAEB8` (cold steel) → `--heat-2` `#B7BF91` at 40% → `--heat-3` `#EFBE62` at 70% → `--heat-4` `#FF4B12` (hot signal). Each total is interpolated in sRGB against the month's peak, so nearby totals do not collapse into coarse buckets. Every logged day uses `--heat-ink` `#1A0A04`, with measured contrast of at least 5.75:1 across the ramp. Zero days retain `--heat-0` `#141715` and `--ash` text. The continuous legend describes logged-day intensity; the numeric total remains the primary readout.
+- Sage page, paper calendar, lavender selected day, forest actions.
+- Fraunces display and numbers; Archivo text and controls.
+- A task grid on desktop and a thumb-first stack on mobile.
+- The same rough imperative voice and logging workflow in both themes.
 
-One more accent, `--signal-mid` `#D13C0C`, exists only for the leaderboard's non-leader bars: it clears 3:1 against their track while leaving the leader's `--signal` a clear step above.
+## Colors
 
-## Type
+The default palette pairs pale botanical grounds with dark green text; lavender identifies the selected-day workspace without competing with the action color. The frontmatter owns exact values, extracted from `web/garden.css`; its `classic-*` entries record the retained values from `web/app.css`.
 
-- **Display:** Big Shoulders Display, variable 400–900, self-hosted (`web/fonts/bigshoulders.woff2`, SIL OFL). Uppercase, weight 800–900, tracking `-0.03em`. Used for the wordmark, section headings, and the live rep total.
-- **Text/UI:** Archivo, variable 400–800, self-hosted (`web/fonts/archivo.woff2`, SIL OFL). An industrial grotesque, chosen over the usual UI faces because it shares the display face's signage lineage. `font-variant-numeric: tabular-nums` everywhere a number can change.
-- Scale steps are deliberate and few: `0.75 / 0.875 / 1 / 1.375 / 2 / 4.5rem`. The rep total is the only element allowed past 4rem.
+### Primary
 
-## Form
+- **Forest** (`--signal`) identifies primary actions, focus, current-day outline and active rails. **Deep forest** (`--signal-deep`) handles hover and pressed actions.
+- **Leaf bar** (`--signal-mid`) fills non-leader bars; the leader uses forest. Keep the visible track and printed totals.
+- The calendar ramps from **shoot** through **sprout** and **leaf** to **full leaf** (`--heat-1` through `--heat-4`). Positive totals interpolate continuously in sRGB relative to the month's peak, with stops at 0%, 40%, 70% and 100%. Every logged cell uses **heat text**; empty days use **heat empty** and muted text. Numeric totals and accessible names remain authoritative.
 
-- **Radius: 0.** Everything is a rectangle. Depth comes from value steps and hairlines, not from rounding.
-- **Shadows** carry a real offset and blur (`0 18px 40px -24px rgb(0 0 0 / .9)`) and appear only on the sticky log bar. No zero-blur block shadows: this world is hard, not neobrutalist costume.
-- **Separators** are 1px `--rule`. Emphasis rules are 3px `--signal` on the top edge of a block, never a left border on a card.
-- **Structure is stacked bands**, not a grid of equal cards. Each band is titled by a rule and a heading, and bands are separated by generous space with tight internal grouping.
+### Secondary
+
+- **Lavender** (`--petal`) grounds the selected-day panel; **plum** (`--plum`) colors its heading and total. That panel locally substitutes **day rule** and **day muted** for dividers and secondary text.
+- **Rust warning** (`--warn`) identifies errors and destructive confirmations alongside explicit wording.
+
+### Neutral
+
+- **Sage** (`--ink`) is the page ground, not an occasional accent wash.
+- **Paper** (`--slab`) supports calendar, fields, Settings and logging surfaces.
+- **Sage well** (`--slab-2`) supports secondary fills, requests and comparison tracks; **sage rule** (`--rule`) separates controls and rows.
+- **Forest text** (`--bone`) is primary text; **muted leaf** (`--ash`) is secondary text. Selection uses its own pale green token with forest text.
+
+Classic uses the same CSS property roles with its own dark values. Its logged-day ramp remains cold steel → muted olive → amber → oxide orange, with one dark foreground. A theme change must recolor existing calendar cells through variables without changing the data.
+
+**The Numeric Truth Rule.** Color and bar length supplement explicit numbers; neither is the sole carrier of activity or rank.
+
+## Typography
+
+**Display:** Fraunces, with Georgia and serif fallbacks; locally bundled variable weights 400–700 under the SIL Open Font License. **Text/UI:** Archivo, with system-ui and platform sans-serif fallbacks; locally bundled weights 400–800. Classic retains Big Shoulders, with Arial Narrow and sans-serif fallbacks, at weights 400–900. Font assets and license information live in `web/fonts/`; no runtime font service is required.
+
+Fraunces supplies the organic wordmark, headings and large numbers. Archivo keeps commands and dense records legible. Tabular numerals prevent changing totals from shifting their columns.
+
+- **Display:** the introductory heading uses the frontmatter display role; mobile fixes it at 2.5rem. The sign-in wordmark uses its separate wordmark role.
+- **Titles:** general headings use the title role. The calendar and board title step up to 1.75rem; the calendar title becomes 1.5rem on mobile.
+- **Numbers:** summary totals use the number role, reduced to 1.875rem on mobile. Selected-day totals use 2.5rem. Calendar totals use Archivo at 1.0625rem, reduced to .875rem on mobile.
+- **Body:** the frontmatter body role governs the default plant surface. Text/password inputs remain 1rem.
+- **Actions:** buttons and tabs use the action role and retain uppercase commands. Field labels use .8125rem without forced uppercase; compact metadata uses .6875rem.
+
+Classic keeps uppercase condensed headings and heavier numerals; do not apply the plant type overrides globally.
+
+## Layout
+
+The default shell and desktop logging dock share a maximum width of 76rem. Desktop sheet padding is 2.5rem above, 2rem at the sides and 14rem below to clear the dock. The header is at least 80px high. The log view uses a two-column task grid (1.55:1, with a 2.5rem gap): introduction and statistics above, calendar on the left, selected day and variations on the right. Crew places its paper leaderboard panel beside the roster.
+
+At 48–64rem, columns narrow to 1.35:1, gaps and outer padding reduce to 1.5rem, panel padding reduces to 1rem, and calendar controls stack. From 48rem, the dock is a single row: variation, number with quick keys, commit. Classic retains its original 40rem stacked sheet and dock arrangement.
+
+Below 48rem, the plant view stacks introduction, statistics, calendar, selected day and variations with 1.75rem gaps. The header drops to 72px, the username and wordmark suffix hide, and side padding is 1rem with safe-area protection. The paper calendar extends .5rem into each gutter to protect seven-column legibility. Crew also stacks. The floating `LOG A SET` action opens the existing modal logging sheet. Bottom clearance and safe-area insets protect the action and content.
+
+At widths below 359px the header tightens further. Calendar controls remain numeric and readable at 320px; narrow seven-column cells are the documented exception to the general 48px touch-target goal. Do not introduce horizontal page scrolling to force wider cells.
+
+## Elevation & Depth
+
+Most hierarchy comes from tonal panels, spacing and thin rules. The calendar and selected day are flat; shadows identify controls that float above content. The dock uses `--shadow-lift` (0 -12px 36px -20px rgb(32 61 46 / .22)); the mobile action uses a downward shadow (0 8px 24px -8px rgb(32 61 46 / .35)). Settings uses a native dialog and a dark translucent backdrop (rgb(7 24 17 / .6)). Classic retains its original darker dock shadow.
+
+Shared motion keeps the existing mechanical scoreboard grammar: changed numbers land over 420ms; calendar and month navigation communicate direction over 480ms/340ms; tab rails travel over 340ms; sheets slide over 340ms. Plant changes the logged-day pulse to a small leaf-settle scale from .94 to 1. Motion uses `cubic-bezier(.16, 1, .3, 1)`, is cancellable and does not queue behind input. Unchanged refreshes do not animate. Reduced-motion preferences disable or cancel animation while data and focus update immediately.
+
+## Shapes
+
+Plant controls use softly curved corners: quick keys (6px), buttons and fields (8px), calendar days (10px desktop, 7px mobile), desktop picker (12px), and major panels and Settings (16px). The mobile sheet rounds its top corners only; its full-screen picker has square corners. The mobile logging action is a 56px-high pill with 28px ends and a minimum width of 144px. Icon buttons and request badges are circular.
+
+Classic retains square controls and panels, with its original circular mobile action. The shared theme switch is a deliberate rounded control in both worlds. Do not translate plant radii into Classic by editing unscoped selectors.
 
 ## Components
 
-- **Log bar** — variation chips, a large numeric field, `+5 / +10 / +20` quick keys, and a commit button. Minimum 52px targets. It has two forms:
-  - **Under 48rem** it is a modal bottom sheet, closed by default. A 64px circular FAB sits bottom-right; tapping it slides the sheet up, focuses the number field, makes the page behind it `inert`, and dims it with a scrim. Committing a set, the close button, or Escape slide it back down and return focus to the FAB. A tap on the scrim deliberately does **not** close it: losing a half-entered set to a stray tap while picking a variation is a worse failure than having to aim for the X. Screen space on a phone belongs to the calendar, not to a control the user needs for three seconds at a time.
-  - **From 48rem up** there is room to keep it permanently docked as one row, and the FAB, scrim, and sheet header are removed entirely.
-- **FAB** — the one round element in a rectangular world. A thumb target that reads as a physical button earns the exception; nothing else does.
-- **Variation picker** — one trigger showing the current variation, so the control does not grow with the list. It is an ARIA 1.2 combobox with a listbox popup: focus stays on the trigger and `aria-activedescendant` moves, so it never fights the sheet's focus trap. Under 48rem the list is a full-screen overlay above the sheet; from 48rem up it is a dropdown anchored to the trigger. The selected row is `--signal` with a check; the active row takes an inset `--signal` bar.
-  The choice is remembered per account in `localStorage`, falling back to the server's last-used entry, then to the first variation.
-- **Calendar title** — the band title is the displayed month's total: a display-face tabular count (`12,345`) over a smaller `--ash` label (`this month`, `in March`, `in March 2025`). "This month" follows the server's today, and the count comes from the same response as the grid. It is not a live region; `#cal-label` stays the one announcer. At 360px and below the month nav wraps beneath it.
-- **Calendar** — a real `<table>`, Monday first. Each day with data is a `<button>` carrying its interpolated heat color plus its visible total. Today gets `aria-current="date"` and a 2px `--bone` outline outside the cell, separated from the fill by a 1px dark gap. The outline preserves the filled area and contrasts against the grid regardless of heat color. A historical selection uses an inset border.
-- **Stat band** — four figures in a row of hairline-separated columns (today, 7 days, month, streak). Deliberately not the hero-metric template: no accent card, no icon, no supporting sub-stat — plain columns with display numerals.
-- **Section nav** — two tabs in the top bar, `LOG` and `CREW`, sharing the auth tabs' language: the active one is `--bone` over a 2px `--signal` underline. It switches which panel of the sheet is showing, not which page you are on — the log bar stays docked on both, so a set can still be committed while reading the board. An unanswered incoming request puts a `--signal` count chip on `CREW`, because the banner alone would only be seen by someone already looking at the top of the page.
-- **Request banner** — sits inside the sticky chrome, directly under the top bar, so it pins in place instead of scrolling away. A 3px `--signal` top rule and a `--slab` ground mark it as an inserted block rather than a band of the page. Its content aligns to the same 40rem column as the sheet. It is capped at `42svh` and scrolls internally, so a pile-up of requests can never push the app off the screen. Deliberately not dismissible: a request is somebody waiting, and the only ways out are answering it. `DECLINE` is a two-step: it locks the sender out for a week and cannot be taken back, so the row restates the cost in `--warn` and asks for `TURN AWAY` / `KEEP`. The banner lives inside `.chrome`, which is what the log sheet marks `inert` — otherwise the sheet is `aria-modal` while two of its first tab stops sit outside it.
-- **The board** — a leaderboard read as a bar chart. Each row is rank, name, total, then a full-width track beneath them, so the rows stack into a chart without a chart library. The bar carries the comparison and the number beside it carries the value, so length is never the only channel. The leader's bar is `--signal` at 100%; everyone else is `--signal-mid` at their share of the leader, with a 2% floor so a non-zero total is never invisible. The track is `--slab-2`, not the heat ramp's base: a bar can only be read as a *share* if its denominator is visible, and the bar itself has to clear 3:1 against that track to carry the comparison at all. Each non-leader row also prints `+35 TO PASS` against the row above — the distance is the number the board exists to produce, and leaving it as subtraction is work for somebody who is out of breath. The board reconciles on user id rather than rebuilding, so a redraw that changed nothing moves nothing at all — which is what makes it safe for the page to redraw whenever the server says something changed. A bar grows from zero only when its row is new to the board; an existing row's bar travels to its new length (420ms, the same exponential ease as the commit slam), growing or shrinking but never refilling, and a row that changed rank slides to the place it now holds instead of teleporting there. `YOU` marks your own row in `--signal`, as a sibling of the truncating name rather than inside it, so a long username cannot clip away the one marker that identifies you. The period tabs (`TODAY / WEEK / MONTH / ALL TIME`) re-sort it, so the top row is always the biggest bar, and the heading names the day, Monday–Sunday date range, or month the window covers — never repeating the tab's own label, since two windows can hold identical numbers and the switch still has to be legible. A single row is not a ranking: it is hidden until there is something to rank, because crowning somebody for a total of zero is the congratulation the product refuses.
-- **The crew** — the roster under the board: add-by-username, then each friend with their all-time total and a remove control. A separate `ASKED` list shows requests you sent, and says plainly when one was declined and how many days are left, rather than letting a silently failing retry explain itself.
-- **Icons** — authored inline SVG, 1.75px stroke, square caps. No emoji, no glyph substitutes.
+### Actions, fields and navigation
 
-## Quick keys
+Primary actions use forest and paper text, darkening on hover or press. Outline actions use a rule border that turns forest on hover. Ghost actions use muted text and forest on hover; icon buttons add a sage-well hover fill. Visible keyboard focus is a 2px signal outline with a 2px offset. Text inputs use paper, a rule border, 52px minimum height and a signal focus border. Disabled buttons retain their shared reduced opacity and unavailable cursor.
 
-`+5 / +10 / +20 / C` cancel their own pointer press so they never take focus from the number field. The on-screen keyboard therefore stays up and the keys hold still under a repeating thumb, and the new total is left selected so the next keystroke replaces it rather than appending. Cancelling the press also suppresses `:active`, so the pressed state is driven explicitly. Each tap fires a 12 ms haptic tick where the Vibration API exists (Android, including the installed PWA); iOS Safari does not implement it, so it is a silent no-op there.
+The `LOG` / `CREW`, account and leaderboard period tabs retain their ARIA tab behavior and roving focus. A moving signal underline identifies selection. An incoming request adds a numeric circular badge to `CREW`. The log control remains available on the crew surface.
 
-## Voice on the social surface
+### Calendar, statistics and selected day
 
-Nothing congratulates and nothing pleads. A request reads `alice wants in. Accept?` and the answers are `ACCEPT` / `DECLINE`. An empty board says `NOBODY TO BEAT. ADD SOMEONE BELOW.` A declined request is stated as a fact with its cost attached — `Declined · 5 days` — because hiding it would only make the next retry fail for no visible reason.
+The calendar is a Monday-first table inside the paper panel. Each day carries a visible date, total and full accessible name. Today has `aria-current="date"` and an outer signal outline separated from the fill; historical selection uses an inset border. The month total and month navigation keep their existing meanings and announcements. Preserve the four-column statistics row and its thin dividers; figures remain distinct from the calendar's month total.
 
-## Motion
+The lavender selected-day panel holds its date, total and entry rows. Variations sit below it without another enclosing panel. Inline removal controls and empty states keep the original direct wording.
 
-The motion direction is **mechanical scoreboard**, chosen by the user. A number landing is the signature: changed totals settle through a small vertical compression and brief blur over 420ms using `cubic-bezier(.16,1,.3,1)`. Committing a set keeps the stronger counter slam and one heat pulse on its day. Unchanged refreshes trigger no motion.
+### Logging and variation picker
 
-The opening scoreboard settles its stats and calendar rows over 480ms, with 45ms between rows. This sequence runs once on entry; refreshes preserve the existing grid. Navigation communicates direction. The calendar and month label enter from the browsing direction over 480ms/340ms, clipped by a viewport that leaves room for the outside today marker. A 2px signal rail travels between selected tabs over 340ms using translation and scaling. Switching Log/Crew settles the destination panel over 420ms. Leaderboard bars scale to their new shares, and overtaking rows slide into place over 420ms. The log sheet retains its 340ms slide.
+Mobile logging uses the original modal bottom sheet: opening focuses the numeric field, makes the background inert and shows a scrim. Commit, Close or Escape closes it and returns focus to the floating action. A stray scrim tap does not discard the workflow. Desktop keeps logging docked and visible.
 
-Scripted motion is cancellable, never queues behind rapid input, and skips hidden or offscreen elements. Data and focus update immediately. All motion respects `prefers-reduced-motion`; changing that preference also cancels animations already running. CSS provides the static state, so navigation and logging remain functional without animation support.
+The variation trigger is an ARIA combobox with a listbox popup, full-screen on mobile and anchored on desktop. Focus stays on the trigger while the active descendant moves; selection uses signal fill and a check. The per-account last-used variation preference is separate from the browser-wide theme preference.
 
-## Browser surfaces
+Quick keys `+5 / +10 / +20 / C` preserve number-field focus and selection so repeated tapping does not dismiss the keyboard. The explicitly driven press state and 12ms Vibration API tick remain shared; unsupported vibration is a no-op.
 
-Themed, not defaulted: `::selection` (signal on ink), `caret-color`, `accent-color`, custom scrollbar track and thumb, a 2px `--signal` focus ring with a 2px offset, and `text-underline-offset`.
+### Crew and requests
 
-## Voice
+The board remains a bar comparison: rank, name, total, visible track and `TO PASS` distance. Forest identifies the leader and leaf-bar fills other shares, with a floor for nonzero totals. `YOU` remains outside the truncating name. Existing rows reconcile by user ID and travel to changed positions or totals; unchanged refreshes do not refill bars. The board remains hidden when there is only one person to rank.
 
-Imperative and short. Buttons name the act: `LOG IT`, `ADD VARIATION`, `SIGN IN`. Empty states state the gap without cheering: "NOTHING LOGGED TODAY." Errors name the problem and the recovery: "That username is taken. Pick another." No exclamation marks, no congratulation for the minimum.
+The request banner stays in sticky chrome and is capped at 42svh with internal scrolling. Plant uses sage-well fill without Classic's signal top rule. Accept/decline behavior, destructive confirmation, announcement and the `ASKED` list remain shared. Keep competitive empty states and clear consequences.
+
+### Settings and theme persistence
+
+Settings is available on both sign-in and app headers. Its native modal dialog provides focus containment, Escape dismissal and focus return. The **Classic theme** switch selects `classic` when on and `plant` when off; plant is the default for missing or unknown preferences.
+
+`web/theme.js` runs before styles and reads `pushup-counter:theme` from localStorage. It updates the root theme, browser color scheme, theme-color metadata and favicon; storage events synchronize tabs, including a return to plant when storage is cleared. Switching requires no reload and preserves drafts and app state. When saving is denied, the theme still changes for the visit and Settings states: “Theme changed for this visit. Enable browser storage to remember it.” There is no server or account settings API.
+
+### Identity and browser surfaces
+
+The plant header uses the authored inline leaf SVG with rounded caps and joins. Shared icons remain authored SVG; Classic keeps square caps. The installed app retains the existing tally mark, recolored in forest and sage. The manifest and Apple touch icon remain plant-themed even when Classic is selected; the in-app favicon and theme-color metadata follow the current theme. Native installed iOS status-bar appearance has not been verified.
+
+Selection, caret, accent color, scrollbars and link underline offset remain themed. The theme choice is not an accessibility mode: both appearances must retain focus, numeric alternatives, pinch zoom and reduced-motion behavior.
+
+## Do's and Don'ts
+
+### Do:
+
+- **Do** keep the rough imperative voice in both visual worlds.
+- **Do** scope botanical color, type, shape and layout changes to the plant theme.
+- **Do** keep logged totals and accessible names alongside calendar color and leaderboard bars.
+- **Do** preserve drafts, focus and the existing logging workflow when switching themes.
+- **Do** ship fonts and icons locally with the embedded app shell.
+
+### Don't:
+
+- **Don't** replace the retained Classic stylesheet with a partial dark approximation.
+- **Don't** turn the plant identity into dietary advice, training promises or invented evidence.
+- **Don't** round every shared component globally or replace the task layout with uniform cards.
+- **Don't** make theme selection an account or server setting without a separate product decision.
+- **Don't** animate unchanged data or delay data and focus updates behind motion.

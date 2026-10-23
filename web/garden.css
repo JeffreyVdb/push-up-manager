@@ -1,0 +1,339 @@
+/* ROOTED — a plant-based companion to the original FLOOR theme.
+   Shared behavior lives in app.css; every visual replacement is scoped. */
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/fraunces.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+.plant-only { display: none; }
+.wordmark > .classic-only, .wordmark a > .classic-only { color: inherit; }
+:root[data-theme="plant"] .plant-only { display: block; }
+:root[data-theme="plant"] .classic-only { display: none; }
+
+/* Settings belong to both themes. Native dialog supplies modality and focus. */
+.gate-inner { position: relative; }
+.gate-tools { position: absolute; right: 0; top: -4rem; }
+.settings {
+  width: min(28rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: 1.5rem;
+  background: var(--slab);
+  color: var(--bone);
+  border: 1px solid var(--rule);
+  font: inherit;
+}
+.settings::backdrop { background: rgb(7 24 17 / .6); }
+.settings-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.settings-head .band-title { padding: 0; }
+.settings-intro { margin: .5rem 0 1.5rem; color: var(--ash); }
+.theme-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.25rem 0;
+  border-block: 1px solid var(--rule);
+  cursor: pointer;
+  min-height: 48px;
+}
+.theme-setting strong { display: block; font-size: 1rem; }
+.theme-setting small { display: block; margin-top: .375rem; color: var(--ash); line-height: 1.5; }
+.theme-switch {
+  appearance: none;
+  flex: 0 0 52px;
+  width: 52px;
+  height: 48px;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+}
+.theme-switch::before {
+  content: "";
+  position: absolute;
+  inset: 9px 0;
+  border: 1px solid var(--ash);
+  border-radius: 20px;
+  background: var(--slab-2);
+}
+.theme-switch::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 14px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--ash);
+  transition: transform .2s var(--ease);
+}
+.theme-switch:checked::before { background: var(--signal); border-color: var(--signal); }
+.theme-switch:checked::after { background: var(--ink); transform: translateX(22px); }
+.settings > .hint { margin-top: 1rem; }
+
+:root[data-theme="plant"] {
+  color-scheme: light;
+  --ink: #edf3e7;
+  --slab: #fcfdf8;
+  --slab-2: #e1eadb;
+  --rule: #c6d3bd;
+  --bone: #203d2e;
+  --ash: #52634e;
+  --signal: #356443;
+  --signal-deep: #264b32;
+  --signal-mid: #648052;
+  --warn: #9a3f24;
+  --heat-0: #f0f3e9;
+  --heat-1: #e1ebcf;
+  --heat-2: #c4db9d;
+  --heat-3: #a0c479;
+  --heat-4: #80ae5f;
+  --heat-ink: #20351d;
+  --display: "Fraunces", Georgia, serif;
+  --petal: #ece7f1;
+  --plum: #665270;
+  --shadow-lift: 0 -12px 36px -20px rgb(32 61 46 / .22);
+}
+
+:where([data-theme="plant"]) body { font-size: .9375rem; }
+:where([data-theme="plant"]) ::selection { background: #cadba9; color: var(--bone); }
+:where([data-theme="plant"]) .ico { stroke-linecap: round; stroke-linejoin: round; }
+:where([data-theme="plant"]) .wordmark {
+  font-weight: 600;
+  text-transform: none;
+  line-height: 1.03;
+  letter-spacing: -.04em;
+}
+:where([data-theme="plant"]) .wordmark span { color: inherit; }
+:root[data-theme="plant"] .brand-lockup { display: flex; align-items: center; gap: .625rem; }
+:where([data-theme="plant"]) .brand-lockup .ico { width: 1.5rem; height: 1.5rem; color: var(--signal); }
+:where([data-theme="plant"]) .wordmark-sm { font-size: 1.5rem; white-space: nowrap; }
+:where([data-theme="plant"]) .band-title { font-size: 1.25rem; font-weight: 500; letter-spacing: -.02em; text-transform: none; }
+:where([data-theme="plant"]) .btn,
+:where([data-theme="plant"]) .tab,
+:where([data-theme="plant"]) .vtab,
+:where([data-theme="plant"]) .ptab {
+  letter-spacing: .015em;
+  font-family: var(--text);
+  font-size: .75rem;
+  font-weight: 600;
+}
+:where([data-theme="plant"]) .btn { border-radius: 8px; }
+:where([data-theme="plant"]) .btn-primary { color: var(--slab); }
+:where([data-theme="plant"]) .btn-primary:hover,
+:where([data-theme="plant"]) .fab:hover { background: var(--signal-deep); }
+:where([data-theme="plant"]) .btn-primary:active,
+:where([data-theme="plant"]) .fab:active { color: var(--slab); }
+:where([data-theme="plant"]) .btn-icon { border-radius: 50%; }
+:where([data-theme="plant"]) .btn-icon:hover { background: var(--slab-2); }
+:where([data-theme="plant"]) .btn-sm { min-height: 48px; }
+:where([data-theme="plant"]) input[type="text"],
+:where([data-theme="plant"]) input[type="password"] { border-radius: 8px; background: var(--slab); }
+:where([data-theme="plant"]) input::placeholder { color: var(--ash); }
+:where([data-theme="plant"]) .field-label { letter-spacing: 0; font-size: .8125rem; text-transform: none; }
+:where([data-theme="plant"]) .alert { border-radius: 8px; }
+:where([data-theme="plant"]) .settings { border-radius: 16px; }
+
+/* Account: the same voice, with the shape of a community seed-packet mark. */
+:where([data-theme="plant"]) .gate { padding-top: max(6rem, var(--safe-t)); }
+:where([data-theme="plant"]) .gate-inner { max-width: 25rem; }
+:where([data-theme="plant"]) .gate-brand { margin-bottom: 1.5rem; }
+:where([data-theme="plant"]) .gate-brand .ico { width: 2.75rem; height: 2.75rem; stroke-width: 1.25; }
+:where([data-theme="plant"]) .gate .wordmark { font-size: clamp(3.5rem, 13vw, 4.75rem); }
+:where([data-theme="plant"]) .gate-line { border: 0; padding: 0; margin: 1.25rem 0 2.5rem; max-width: none; }
+:where([data-theme="plant"]) .tabs { margin-bottom: .25rem; }
+
+/* Shell and overview. Sage is a working surface, not an accent wash. */
+:where([data-theme="plant"]) .chrome { border-bottom: 1px solid var(--rule); }
+:where([data-theme="plant"]) .topbar {
+  max-width: 76rem;
+  margin: auto;
+  padding-inline: max(2rem, var(--safe-l)) max(2rem, var(--safe-r));
+  min-height: 80px;
+  border: 0;
+}
+:where([data-theme="plant"]) .topbar-right { gap: .25rem; }
+:where([data-theme="plant"]) .who { letter-spacing: 0; text-transform: none; max-width: 9rem; }
+:where([data-theme="plant"]) .viewnav { gap: 1rem; }
+:where([data-theme="plant"]) .vtab { min-width: 64px; }
+:where([data-theme="plant"]) .badge { border-radius: 50%; color: var(--slab); }
+:where([data-theme="plant"]) .sheet { max-width: 76rem; padding: 2.5rem 2rem 14rem; }
+:where([data-theme="plant"]) #view-log {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  grid-template-areas: "intro stats" "calendar day" "calendar types";
+  column-gap: 2.5rem;
+  row-gap: 2rem;
+  align-items: start;
+}
+:where([data-theme="plant"]) #view-log > * { min-width: 0; }
+:where([data-theme="plant"]) .garden-intro { grid-area: intro; align-self: center; }
+:where([data-theme="plant"]) .garden-intro h2 {
+  font-family: var(--display);
+  font-size: clamp(2.25rem, 4vw, 3.5rem);
+  font-weight: 500;
+  letter-spacing: -.04em;
+  line-height: 1.12;
+  margin: 0;
+  text-wrap: balance;
+}
+:where([data-theme="plant"]) .garden-intro p { margin: .75rem 0 0; color: var(--ash); font-size: .875rem; }
+:where([data-theme="plant"]) .stats-band { grid-area: stats; }
+:where([data-theme="plant"]) .band { margin-bottom: 0; }
+:where([data-theme="plant"]) .band > .band-title,
+:where([data-theme="plant"]) .band-head { border: 0; margin-bottom: .75rem; }
+:where([data-theme="plant"]) .num { font-size: 2rem; font-weight: 500; }
+:where([data-theme="plant"]) .stat dt { font-size: .6875rem; text-transform: none; letter-spacing: 0; margin-bottom: .5rem; }
+:where([data-theme="plant"]) .stat { padding-right: .5rem; }
+:where([data-theme="plant"]) .stat + .stat { padding-left: .75rem; }
+:where([data-theme="plant"]) .band-foot { font-size: .75rem; }
+:where([data-theme="plant"]) .stats-band > .band-title { font-family: var(--text); font-size: .6875rem; color: var(--ash); padding: 0; letter-spacing: .04em; }
+
+/* Calendar: the month's work grows from pale shoots into full leaf green. */
+:where([data-theme="plant"]) .calendar-band { grid-area: calendar; background: var(--slab); border-radius: 16px; padding: 1.5rem; }
+:where([data-theme="plant"]) .garden-calendar-title { font: 500 1.75rem/1.2 var(--display); letter-spacing: -.03em; margin: 0 0 1rem; }
+:where([data-theme="plant"]) .calendar-band .band-head { align-items: center; gap: .5rem; }
+:where([data-theme="plant"]) .cal-title { padding-bottom: 0; }
+:where([data-theme="plant"]) .cal-count { font: 600 1rem var(--text); letter-spacing: 0; }
+:where([data-theme="plant"]) .cal-count-label { font: 400 .75rem var(--text); letter-spacing: 0; }
+:where([data-theme="plant"]) .monthnav { gap: 0; }
+:where([data-theme="plant"]) .monthlabel { font: 600 .75rem var(--text); text-transform: none; letter-spacing: 0; }
+:where([data-theme="plant"]) .cal { width: 100%; margin: 0; border-collapse: separate; border-spacing: 4px; }
+:where([data-theme="plant"]) .cal th { font-size: .6875rem; font-weight: 500; letter-spacing: 0; }
+:where([data-theme="plant"]) .cal td { padding: 0; }
+:where([data-theme="plant"]) .day { border-radius: 10px; min-height: 56px; max-height: 78px; }
+:where([data-theme="plant"]) .day .d { font-size: .6875rem; font-weight: 400; }
+:where([data-theme="plant"]) .day .t { font-family: var(--text); font-size: 1.0625rem; font-weight: 600; }
+:where([data-theme="plant"]) .day[aria-current="date"] { outline-color: var(--signal); outline-offset: 1px; }
+:where([data-theme="plant"]) .day.pulse { animation-name: leaf-settle; }
+@keyframes leaf-settle { from { transform: scale(.94); } to { transform: scale(1); } }
+:where([data-theme="plant"]) .legend { text-transform: none; letter-spacing: 0; font-size: .6875rem; justify-content: flex-end; gap: .5rem; }
+:where([data-theme="plant"]) .heat-scale { height: 8px; border-radius: 4px; }
+
+/* The selected day gets a quiet secondary colour; variations stay unboxed. */
+:where([data-theme="plant"]) .day-band { grid-area: day; padding: 1.5rem; background: var(--petal); border-radius: 16px; --rule: #cfc5d6; --ash: #62546a; }
+:where([data-theme="plant"]) .day-band .band-title { color: var(--plum); }
+:where([data-theme="plant"]) .daylabel { align-items: center; margin-bottom: 1rem; }
+:where([data-theme="plant"]) .daylabel strong { font-size: .6875rem; letter-spacing: .01em; font-weight: 500; }
+:where([data-theme="plant"]) .daytotal { color: var(--plum); font-size: 2.5rem; font-weight: 500; }
+:where([data-theme="plant"]) .e-count { font-weight: 500; min-width: 2.5ch; }
+:where([data-theme="plant"]) .e-time { font-size: .6875rem; }
+:where([data-theme="plant"]) .empty { font: 500 .75rem/1.7 var(--text); letter-spacing: .02em; }
+:where([data-theme="plant"]) .types-band { grid-area: types; }
+:where([data-theme="plant"]) .t-total { font-size: .6875rem; letter-spacing: 0; }
+:where([data-theme="plant"]) .typelist li { padding-block: .375rem; }
+:where([data-theme="plant"]) #type-form { margin-top: 1rem; }
+:where([data-theme="plant"]) .tail { font: 500 .75rem var(--text); color: var(--ash); -webkit-text-stroke: 0; letter-spacing: .04em; padding-top: 2.5rem; }
+
+/* Logging keeps the original one-thumb sheet and quick keys. */
+:where([data-theme="plant"]) .logbar { border-top: 1px solid var(--rule); }
+:where([data-theme="plant"]) .logbar-inner { max-width: 76rem; }
+:where([data-theme="plant"]) .type-trigger { background: var(--ink); border-radius: 8px; }
+:where([data-theme="plant"]) .counter input { font-family: var(--display); font-weight: 500; color: var(--bone); }
+:where([data-theme="plant"]) .qk { border-radius: 6px; background: var(--ink); color: var(--bone); }
+:where([data-theme="plant"]) .qk:hover,
+:where([data-theme="plant"]) .qk.is-press { background: var(--slab-2); color: var(--signal-deep); }
+:where([data-theme="plant"]) .fab {
+  width: auto;
+  min-width: 144px;
+  height: 56px;
+  border-radius: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: .5rem;
+  padding-inline: 1.25rem;
+  color: var(--slab);
+  font: 600 .875rem var(--text);
+  box-shadow: 0 8px 24px -8px rgb(32 61 46 / .35);
+}
+:where([data-theme="plant"]) .fab .ico { width: 1.25rem; height: 1.25rem; }
+:where([data-theme="plant"]) .picker-panel { border-radius: 12px; }
+:where([data-theme="plant"]) .opt[aria-selected="true"] { color: var(--slab); }
+:where([data-theme="plant"]) .toast { border-radius: 8px; letter-spacing: .02em; }
+
+/* Crew: a shared growing season, with all the original competitive language. */
+:where([data-theme="plant"]) #view-crew { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 2.5rem; align-items: start; }
+:where([data-theme="plant"]) #view-crew > .band:first-child { padding: 1.5rem; background: var(--slab); border-radius: 16px; }
+:where([data-theme="plant"]) #view-crew .board-head .band-title { font-size: 1.75rem; }
+:where([data-theme="plant"]) .board-window { font-size: .6875rem; letter-spacing: 0; }
+:where([data-theme="plant"]) .periods { width: 100%; margin-top: .5rem; }
+:where([data-theme="plant"]) .ptab { flex: 1; padding-inline: .5rem; }
+:where([data-theme="plant"]) .lb { padding-block: 1rem; }
+:where([data-theme="plant"]) .lb-track { border: 0; border-radius: 6px; height: 10px; overflow: hidden; }
+:where([data-theme="plant"]) .lb-bar { border-radius: 6px; }
+:where([data-theme="plant"]) .lb-num { font-weight: 500; }
+:where([data-theme="plant"]) .lb-gap { letter-spacing: 0; font-size: .625rem; }
+:where([data-theme="plant"]) .requests { border-top: 0; background: var(--slab-2); }
+:where([data-theme="plant"]) .req-title,
+:where([data-theme="plant"]) .reqlist { max-width: 72rem; }
+:where([data-theme="plant"]) .req-title,
+:where([data-theme="plant"]) .subhead { font-family: var(--text); letter-spacing: .02em; font-weight: 600; }
+:where([data-theme="plant"]) .f-meta { letter-spacing: 0; }
+
+@media (min-width: 48rem) {
+  :where([data-theme="plant"]) .fab { display: none; }
+  :where([data-theme="plant"]) .logbar-inner {
+    padding: 1rem 2rem calc(1rem + var(--safe-b));
+    grid-template-columns: minmax(10rem, 1fr) minmax(18rem, 1.5fr) minmax(9rem, .7fr);
+    column-gap: 1.5rem;
+  }
+  :where([data-theme="plant"]) #type-trigger { grid-column: 1; min-height: 64px; }
+  :where([data-theme="plant"]) .logrow { grid-column: 2; }
+  :where([data-theme="plant"]) #log-submit { grid-column: 3; min-width: 0; }
+  :where([data-theme="plant"]) .counter input { font-size: 2.5rem; }
+  :where([data-theme="plant"]) .toast { bottom: calc(7.5rem + var(--safe-b)); }
+}
+@media (min-width: 48rem) and (max-width: 64rem) {
+  :where([data-theme="plant"]) .sheet { padding-inline: 1.5rem; }
+  :where([data-theme="plant"]) #view-log,
+  :where([data-theme="plant"]) #view-crew { column-gap: 1.5rem; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
+  :where([data-theme="plant"]) .calendar-band,
+  :where([data-theme="plant"]) .day-band { padding: 1rem; }
+  :where([data-theme="plant"]) .calendar-band .band-head { flex-direction: column; align-items: flex-start; }
+  :where([data-theme="plant"]) .logbar-inner { column-gap: .75rem; padding-inline: 1.5rem; grid-template-columns: minmax(8rem, 1fr) minmax(16rem, 1.5fr) minmax(8rem, .7fr); }
+}
+@media (max-width: 47.999rem) {
+  :where([data-theme="plant"]) .topbar { padding-inline: max(1rem, var(--safe-l)) max(1rem, var(--safe-r)); min-height: 72px; }
+  :where([data-theme="plant"]) .wordmark-sm { font-size: 1.25rem; }
+  :where([data-theme="plant"]) .brand-suffix,
+  :where([data-theme="plant"]) .who { display: none; }
+  :where([data-theme="plant"]) .viewnav { gap: .25rem; }
+  :where([data-theme="plant"]) .vtab { min-width: 48px; padding-inline: .5rem; }
+  :where([data-theme="plant"]) .topbar-right { gap: 0; }
+  :where([data-theme="plant"]) .sheet { padding: 1.75rem max(1rem, var(--safe-r)) calc(7rem + var(--safe-b)) max(1rem, var(--safe-l)); }
+  :where([data-theme="plant"]) #view-log { display: flex; flex-direction: column; gap: 1.75rem; }
+  :where([data-theme="plant"]) #view-log > * { width: 100%; }
+  :where([data-theme="plant"]) .garden-intro h2 { font-size: 2.5rem; }
+  :where([data-theme="plant"]) .garden-intro p { font-size: .8125rem; margin-top: .5rem; }
+  :where([data-theme="plant"]) .stats-band > .band-title { display: none; }
+  :where([data-theme="plant"]) .stat + .stat { padding-left: 1rem; }
+  :where([data-theme="plant"]) .num { font-size: 1.875rem; }
+  :where([data-theme="plant"]) .calendar-band { padding: 1rem .5rem; width: calc(100% + 1rem) !important; margin-inline: -.5rem; }
+  :where([data-theme="plant"]) .garden-calendar-title { font-size: 1.5rem; margin: 0 .5rem .75rem; }
+  :where([data-theme="plant"]) .calendar-band .band-head { padding-inline: .5rem; gap: 0; }
+  :where([data-theme="plant"]) .cal { border-spacing: 3px; }
+  :where([data-theme="plant"]) .day { min-height: 48px; border-radius: 7px; }
+  :where([data-theme="plant"]) .day .t { font-size: .875rem; }
+  :where([data-theme="plant"]) .day .d { font-size: .625rem; }
+  :where([data-theme="plant"]) .legend { padding-right: .5rem; margin-top: .75rem; }
+  :where([data-theme="plant"]) .day-band { padding: 1.25rem; }
+  :where([data-theme="plant"]) .logbar { border-radius: 16px 16px 0 0; }
+  :where([data-theme="plant"]) .logbar-inner { padding-top: 1rem; }
+  :where([data-theme="plant"]) .picker-panel { border-radius: 0; }
+  :where([data-theme="plant"]) #view-crew { display: flex; flex-direction: column; gap: 2rem; }
+  :where([data-theme="plant"]) #view-crew > .band { width: 100%; }
+  :where([data-theme="plant"]) #view-crew > .band:first-child { padding: 1.25rem; }
+}
+@media (max-width: 359px) {
+  :where([data-theme="plant"]) .topbar { gap: .25rem; padding-inline: .5rem; }
+  :where([data-theme="plant"]) .brand-lockup { gap: .25rem; }
+  :where([data-theme="plant"]) .brand-lockup .ico { width: 1.125rem; height: 1.125rem; }
+  :where([data-theme="plant"]) .wordmark-sm { font-size: 1.125rem; }
+  :where([data-theme="plant"]) .monthnav { margin-left: auto; }
+  :where([data-theme="plant"]) .stat + .stat { padding-left: .625rem; }
+}

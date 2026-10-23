@@ -47,7 +47,11 @@ Not a general fitness tracker. One movement, tracked honestly, with an interface
 
 ## Brand Commitments
 
-Name: **Push-Up Counter**. Voice pinned by the user: rough, brutal, David Goggins hard-mentality. Imperative, unsentimental, no congratulation for the minimum. *(Explicit user constraint.)*
+Name: **Push-Up Counter**. The default visual world is **ROOTED**, a plant-based community garden: sage working surfaces, forest actions, paper and lavender panels, a leaf mark, and Fraunces display type with Archivo text. The user requested a complete vegan/plant-based redesign and explicitly retained the tough-love language. This is a visual identity, not a dietary feature or a claim about nutrition, health, or performance. *(Explicit user direction, 2026-10-23.)*
+
+Voice remains rough, brutal, David Goggins hard-mentality: imperative, unsentimental, no congratulation for the minimum. Keep direct commands and existing competitive language, including `LOG IT`, “No zero days.” and “Reps get logged or they did not happen.” The botanical presentation does not soften that voice. *(Explicit user constraint, reaffirmed 2026-10-23.)*
+
+The original dark **FLOOR** appearance remains available through the **Classic theme** switch in Settings, both before and after sign-in. The choice belongs to the browser, persists locally when storage is available, and synchronizes across tabs. It is not an account preference or a server setting. The plant theme is the default; logging, account, variation, and crew behavior are shared by both themes.
 
 ## Evidence on Hand
 

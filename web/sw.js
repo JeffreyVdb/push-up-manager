@@ -12,13 +12,20 @@ const API = `pushup-api-${VERSION}`;
 const PRECACHE = [
   "/",
   "/app.css?v=__BUILD__",
+  "/garden.css?v=__BUILD__",
+  "/theme.js?v=__BUILD__",
   "/app.js?v=__BUILD__",
   "/fonts/bigshoulders.woff2?v=__BUILD__",
   "/fonts/archivo.woff2?v=__BUILD__",
+  "/fonts/fraunces.woff2",
   "/manifest.webmanifest",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/icon-512-maskable.png",
+  "/icons/plant-icon-192.png",
+  "/icons/plant-icon-512.png",
+  "/icons/plant-icon-512-maskable.png",
+  "/icons/plant-apple-touch-icon-180.png",
 ];
 
 self.addEventListener("install", (event) => {

@@ -19,8 +19,9 @@ pushup-counter: ELF 64-bit LSB executable, x86-64, statically linked, stripped
 - Log reps against a variation. **The day always defaults to today** and the
   variation defaults to the last one you used.
 - Month calendar with a per-day heat map: every day shows its total, and the
-  colour is never the only channel. A continuous cool-to-hot ramp keeps one
-  dark foreground on every day with reps, and an outer border marks today.
+  colour is never the only channel. The default plant theme uses a continuous
+  green ramp; Classic keeps the original cool-to-hot ramp. Logged days retain
+  a dark foreground, and an outer border marks today.
 - Today / 7-day / month / all-time totals, best day, and current streak.
 - **Friends and a shared leaderboard.** Add someone by username; they accept or
   decline from a banner pinned under the top bar. The board ranks you and your
@@ -31,6 +32,21 @@ pushup-counter: ELF 64-bit LSB executable, x86-64, statically linked, stripped
   intact. Calendar navigation, tab indicators and changing totals animate,
   with reduced-motion support.
 - Mobile-first, installable PWA with an offline app shell.
+
+## Appearance and settings
+
+The default **ROOTED** theme uses sage, forest green, paper and lavender surfaces,
+with bundled Fraunces and Archivo fonts. The tough-love language stays intact.
+Open **Settings** on the sign-in screen or app header and enable **Classic theme**
+to restore the original dark **FLOOR** appearance.
+
+The preference is saved in this browser under `pushup-counter:theme`, applied
+before styles load, and synchronized across tabs. It is independent of your
+account. If browser storage is blocked, switching still works for the current
+visit and Settings explains that the choice could not be saved.
+
+The installed PWA keeps its plant-colored tally icon and sage launch colors in
+both themes; the in-app browser theme color and favicon follow your choice.
 
 ## Quick start
 

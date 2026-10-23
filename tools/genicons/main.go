@@ -1,8 +1,8 @@
 // Command genicons draws the Push-Up Counter app icons.
 //
 // The mark is a tally: four upright strokes crossed by a fifth. It is authored
-// here rather than pulled from an icon set so the geometry matches the FLOOR
-// world (hard edges, no rounding, oxide orange on ink).
+// here rather than pulled from an icon set. Both themes retain the tally;
+// ROOTED uses forest on sage, FLOOR uses oxide orange on ink.
 //
 // Run with: go run ./tools/genicons
 package main
@@ -41,19 +41,26 @@ func main() {
 		{"apple-touch-icon-180.png", 180, 0.16},
 	}
 	for _, t := range targets {
-		img := render(t.size, t.inset)
-		f, err := os.Create(filepath.Join(out, t.name))
-		if err != nil {
-			panic(err)
-		}
-		if err := png.Encode(f, img); err != nil {
-			panic(err)
-		}
-		f.Close()
+		writeIcon(filepath.Join(out, t.name), render(t.size, t.inset, ink, signal, bone))
+		writeIcon(filepath.Join(out, "plant-"+t.name), render(t.size, t.inset,
+			color.NRGBA{0xed, 0xf3, 0xe7, 0xff},
+			color.NRGBA{0x35, 0x64, 0x43, 0xff},
+			color.NRGBA{0x66, 0x52, 0x70, 0xff}))
 	}
 }
 
-func render(size int, inset float64) *image.NRGBA {
+func writeIcon(path string, img *image.NRGBA) {
+	f, err := os.Create(path)
+	if err != nil {
+		panic(err)
+	}
+	if err := png.Encode(f, img); err != nil {
+		panic(err)
+	}
+	f.Close()
+}
+
+func render(size int, inset float64, ink, signal, bone color.NRGBA) *image.NRGBA {
 	img := image.NewNRGBA(image.Rect(0, 0, size, size))
 	draw.Draw(img, img.Bounds(), &image.Uniform{ink}, image.Point{}, draw.Src)
 

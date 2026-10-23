@@ -1658,6 +1658,20 @@ async function enterApp() {
 }
 
 function wire() {
+  const settings = $("settings");
+  const themeToggle = $("classic-theme");
+  themeToggle.checked = document.documentElement.dataset.theme === "classic";
+  for (const button of document.querySelectorAll("[data-open-settings]")) {
+    button.addEventListener("click", () => settings.showModal());
+  }
+  $("settings-close").addEventListener("click", () => settings.close());
+  themeToggle.addEventListener("change", () => {
+    const saved = window.PushupTheme.set(themeToggle.checked ? "classic" : "plant");
+    const status = $("theme-status");
+    status.hidden = saved;
+    status.textContent = saved ? "" : "Theme changed for this visit. Enable browser storage to remember it.";
+    requestAnimationFrame(syncTabRails);
+  });
   trackKeyboardInset();
   trackChromeHeight();
   reduceMotion.addEventListener("change", () => {
