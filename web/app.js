@@ -2055,6 +2055,8 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     // Claiming the first visit does not change its build.
     if (!controlled) { controlled = true; return; }
+    // These links keep their token only in memory; a refresh would lose it.
+    if (["/reset-password", "/confirm-email"].includes(location.pathname)) return;
     $("update-banner").hidden = false;
   });
   $("update-refresh").addEventListener("click", () => location.reload());
