@@ -39,6 +39,13 @@
   </defs>
 </svg>
 
+<!-- Shown when a newer build has taken over while this page was open. The
+     outbox is durable, so refreshing never loses a saved set. -->
+<div id="update-banner" class="update-banner" role="status" hidden>
+  <p>A new version is available.</p>
+  <button id="update-refresh" class="btn btn-primary" type="button">REFRESH</button>
+</div>
+
 <!-- ============ AUTH ============ -->
 <main id="startup" class="gate" aria-labelledby="startup-title">
   <div class="gate-inner">

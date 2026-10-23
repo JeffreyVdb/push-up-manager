@@ -30,3 +30,21 @@ test('service worker upgrade deletes legacy globally cached account data', async
   await done;
   assert.deepEqual(removed.sort(), ['pushup-api-OLD', 'pushup-shell-OLD']);
 });
+
+test('a new service worker caches a fresh shell and takes over without waiting', async () => {
+  const handlers = new Map();
+  const added = [];
+  let skipped = false;
+  const context = vm.createContext({
+    Request: class { constructor(url, init) { this.url = url; this.cache = init?.cache; } },
+    self: { addEventListener: (name, fn) => handlers.set(name, fn), skipWaiting: async () => { skipped = true; } },
+    caches: { open: async () => ({ addAll: async (requests) => { added.push(...requests); } }) },
+  });
+  vm.runInContext(readFileSync('web/sw.js', 'utf8'), context);
+  let done;
+  handlers.get('install')({ waitUntil: (promise) => { done = promise; } });
+  await done;
+  assert.ok(added.some((request) => request.url === '/'));
+  assert.ok(added.every((request) => request.cache === 'reload'), 'precache must bypass the HTTP cache');
+  assert.equal(skipped, true);
+});

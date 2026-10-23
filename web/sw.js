@@ -1,7 +1,10 @@
 /* Push-Up Counter service worker.
    Shell is cache-first. Account data and the outbox live in IndexedDB;
    private API responses are never stored in service-worker caches. The build ID is substituted by the Go server at startup, so a
-   changed frontend always produces new cache names. */
+   changed frontend always produces new cache names.
+   A new worker takes over as soon as its complete shell is cached. Waiting
+   for every window to close never happens in an installed app that stays in
+   the background, so an open page offers a refresh instead (see app.js). */
 "use strict";
 
 const VERSION = "__BUILD__";
@@ -35,9 +38,13 @@ const PRECACHE = [
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(SHELL).then((cache) => cache.addAll(PRECACHE))
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(SHELL);
+    // Bypass the HTTP cache: unversioned icons and fonts may be an hour old,
+    // and the shell must be exactly this build.
+    await cache.addAll(PRECACHE.map((url) => new Request(url, { cache: "reload" })));
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener("activate", (event) => {
@@ -47,10 +54,6 @@ self.addEventListener("activate", (event) => {
     await Promise.all(keys.filter((k) => k.startsWith("pushup-") && !keep.has(k)).map((k) => caches.delete(k)));
     await self.clients.claim();
   })());
-});
-
-self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("fetch", (event) => {
@@ -73,7 +76,9 @@ self.addEventListener("fetch", (event) => {
 });
 
 async function shellFirst(request) {
-  const cached = await caches.match("/", { ignoreSearch: false });
+  // This worker's own shell first: its assets are guaranteed to be cached
+  // beside it, so an offline start never waits on a missing stylesheet.
+  const cached = await (await caches.open(SHELL)).match("/") || await caches.match("/");
   if (cached) return cached;
   try {
     return await fetch(request);
@@ -86,7 +91,7 @@ async function shellFirst(request) {
 }
 
 async function cacheFirst(request) {
-  const cached = await caches.match(request);
+  const cached = await (await caches.open(SHELL)).match(request) || await caches.match(request);
   if (cached) return cached;
   const response = await fetch(request);
   if (response.ok) {

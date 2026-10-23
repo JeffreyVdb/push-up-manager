@@ -2048,41 +2048,28 @@ async function renderSyncStatus() {
 }
 
 if ("serviceWorker" in navigator) {
-  // The shell is served cache-first, so a new build only reaches an open tab
-  // if the waiting worker is told to take over. Outbox entries are durable;
-  // defer an update while a rep draft or account form is open.
-  let reloading = false;
+  // A new worker activates as soon as its shell is cached, so the next start,
+  // online or offline, opens the new build. This page keeps running its own
+  // build and never reloads by itself: the person decides when to refresh.
   let controlled = Boolean(navigator.serviceWorker.controller);
   navigator.serviceWorker.addEventListener("controllerchange", () => {
-    // Claiming the first visit does not change its build. Reloading here can
-    // interrupt the first sign-in; only an upgrade of an existing worker needs it.
+    // Claiming the first visit does not change its build.
     if (!controlled) { controlled = true; return; }
-    if (reloading) return;
-    if ($("reps")?.value || $("auth-pass")?.value || document.querySelector("dialog[open]") || ["/reset-password", "/confirm-email"].includes(location.pathname)) {
-      toast("Update ready. It will load the next time you open the app.");
-      return;
-    }
-    reloading = true;
-    location.reload();
+    $("update-banner").hidden = false;
   });
-
-  const takeOver = (worker) => {
-    if (!worker || !navigator.serviceWorker.controller) return;
-    if ($("reps")?.value || $("auth-pass")?.value || document.querySelector("dialog[open]") || ["/reset-password", "/confirm-email"].includes(location.pathname)) return;
-    worker.postMessage({ type: "SKIP_WAITING" });
-  };
+  $("update-refresh").addEventListener("click", () => location.reload());
 
   window.addEventListener("load", () => {
+    // Ask the browser not to evict the shell and saved sets under storage
+    // pressure. Only the installed app asks, because some browsers prompt.
+    if (window.matchMedia("(display-mode: standalone)").matches) navigator.storage?.persist?.().catch(() => {});
     navigator.serviceWorker
       .register("/sw.js", { scope: "/", updateViaCache: "none" })
       .then((reg) => {
-        takeOver(reg.waiting);
-        reg.addEventListener("updatefound", () => {
-          const installing = reg.installing;
-          if (!installing) return;
-          installing.addEventListener("statechange", () => {
-            if (installing.state === "installed") takeOver(reg.waiting || installing);
-          });
+        // An installed app can stay open for days without a navigation, which
+        // is when browsers look for a new worker on their own.
+        document.addEventListener("visibilitychange", () => {
+          if (!document.hidden && navigator.onLine !== false) reg.update().catch(() => {});
         });
       })
       .catch(() => {

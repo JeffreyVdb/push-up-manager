@@ -860,6 +860,21 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
   to   { opacity: 1; transform: translate(-50%, 0); }
 }
 
+/* A newer build took over; refreshing loads it. */
+.update-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem 1rem;
+  padding: calc(.75rem + var(--safe-t)) calc(1rem + var(--safe-r)) .75rem calc(1rem + var(--safe-l));
+  background: var(--slab-2);
+  color: var(--bone);
+  border-bottom: 3px solid var(--signal);
+}
+.update-banner p { margin: 0; font-weight: 700; }
+.update-banner .btn { min-height: 48px; }
+
 /* ============================================================
    Friend requests — the banner
    ============================================================ */

@@ -49,6 +49,12 @@ the initial local read and first sign-in check; the application never waits on
 a server timeout to display a prepared device's log. First-time service-worker
 activation does not reload or interrupt sign-in.
 
+The app shell is cached as a complete unit per build. A new build takes over
+as soon as it is cached, so the next start opens it, online or offline. An open
+app never reloads by itself: it shows **A new version is available** with a
+refresh button. The installed app checks for updates each time it returns to the
+foreground and asks the browser to keep its storage persistent.
+
 Every queued set carries a unique operation ID. SQLite keeps a receipt so
 retrying after a dropped response or from another tab never adds a duplicate,
 even if the original entry has since been deleted. A variation removed on
