@@ -184,9 +184,10 @@ question and explicit action without duplicating the sheet behavior.
 
 **Settings → About → What’s new** contains dated release notes, available before sign-in
 and offline. The Settings icon has a small indicator and an accessible label when
-there are unread notes; **What’s new** also shows **New**. Opening the notes marks
-the latest release read on this browser (`pushup-counter:release-read`) and syncs
-that state across tabs. It never opens automatically or interrupts a workout.
+there are unread notes. About displays the notes immediately under a **What’s
+new** heading. Opening About marks the latest release read on this browser
+(`pushup-counter:release-read`) and syncs that state across tabs. Settings never
+opens automatically or interrupts a workout.
 
 Edit **`web/changelog.html`** for each user-facing release: prepend an article
 with a unique, stable `data-release` ID, a date, a short title, and concise changes.

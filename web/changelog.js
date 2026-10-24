@@ -15,12 +15,14 @@
       button.setAttribute("aria-label", unread ? "Settings — new update notes" : "Settings");
     }
   }
-  notes.addEventListener("toggle", () => {
-    if (!notes.open) return;
-    seen = latest;
-    try { localStorage.setItem(key, latest); } catch { /* Do not block reading. */ }
-    update();
-  });
+  window.PushupChangelog = {
+    markRead() {
+      if (seen === latest) return;
+      seen = latest;
+      try { localStorage.setItem(key, latest); } catch { /* Do not block reading. */ }
+      update();
+    },
+  };
   window.addEventListener("storage", (event) => {
     if (event.key !== key && event.key !== null) return;
     seen = event.newValue;

@@ -330,7 +330,7 @@ Category navigation uses a conventional list/detail hierarchy. Each row has a pl
 
 ### What’s new
 
-Settings includes a **What’s new** disclosure in **About**, with dated release entries, concise change lists and a textual **New** indicator. It has no surrounding borders; About is a separate settings screen. A small signal-colored dot on the Settings control and its accessible label also identify unread notes. Opening the disclosure marks the newest release read on this browser; that state synchronizes across tabs. With storage unavailable, reading still works for the visit.
+Settings includes a **What’s new** heading in **About**, followed immediately by dated release entries and concise change lists. The notes are always expanded. It has no surrounding borders; About is a separate settings screen. A small signal-colored dot on the Settings control and its accessible label also identify unread notes. Opening About marks the newest release read on this browser; that state synchronizes across tabs. With storage unavailable, reading still works for the visit.
 
 Release notes are bundled from `web/changelog.html` into the running app and remain readable offline. Keep newest entries first, use a unique stable release identifier, and retain prior entries for people who skip updates. Updates do not interrupt logging with an automatic dialog. Notes inherit text, rules, focus and spacing from the active theme/mode.
 

@@ -63,11 +63,10 @@
   font-size: 1rem;
 }
 :where([data-theme="plant"]) #color-mode { border-radius: 8px; }
-.release-notes summary { padding-block: .875rem; min-height: 48px; cursor: pointer; font-weight: 600; }
 .release-notes > .hint { margin: .5rem 0 1.5rem; }
 .release-entry { margin-bottom: 1.5rem; }
 .release-entry + .release-entry { padding-top: 1.5rem; border-top: 1px solid var(--rule); }
-.release-entry h4 { font: 600 1.125rem/1.4 var(--text); margin: 0 0 .25rem; }
+.release-entry h5 { font: 600 1.125rem/1.4 var(--text); margin: 0 0 .25rem; }
 .release-entry time { color: var(--ash); font-size: .875rem; }
 .release-entry ul { padding-left: 1.25rem; margin: .75rem 0 0; }
 .release-entry li + li { margin-top: .5rem; }

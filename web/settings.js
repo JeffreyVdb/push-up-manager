@@ -34,6 +34,7 @@
     title.textContent = !wide.matches && current ? current.label : "Settings";
     back.hidden = wide.matches || !current;
     content.scrollTop = preserveScroll ? scrollTop : 0;
+    if (dialog.open && current?.section.id === "about-settings") window.PushupChangelog?.markRead();
     if (focus && dialog.open) {
       const target = current
         ? (wide.matches ? current.section.querySelector("h3") : title)

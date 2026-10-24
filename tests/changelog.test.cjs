@@ -5,7 +5,7 @@ const vm = require('node:vm');
 
 function visit(storage = new Map(), blocked = false, latest = 'release-3') {
   const listeners = {};
-  const notes = { open: false, querySelector: () => ({ dataset: { release: latest } }), addEventListener: (name, fn) => { listeners[name] = fn; } };
+  const notes = { querySelector: () => ({ dataset: { release: latest } }) };
   const badge = {};
   const button = { toggleAttribute(name, value) { this[name] = value; }, setAttribute(name, value) { this[name] = value; } };
   const document = { getElementById: id => id === 'whats-new' ? notes : badge, querySelectorAll: () => [button] };
@@ -13,18 +13,17 @@ function visit(storage = new Map(), blocked = false, latest = 'release-3') {
     getItem(key) { if (blocked) throw Error(); return storage.get(key) ?? null; },
     setItem(key, value) { if (blocked) throw Error(); storage.set(key, value); },
   };
-  vm.runInNewContext(readFileSync('web/changelog.js', 'utf8'), { document, localStorage, window: { addEventListener: (name, fn) => { listeners[name] = fn; } } });
-  return { notes, badge, button, listeners };
+  const window = { addEventListener: (name, fn) => { listeners[name] = fn; } };
+  vm.runInNewContext(readFileSync('web/changelog.js', 'utf8'), { document, localStorage, window });
+  return { badge, button, listeners, openAbout: () => window.PushupChangelog.markRead() };
 }
 
 test('notes are new until opened, remain read on reload, and become new for a later release', () => {
   const storage = new Map();
   const app = visit(storage);
   assert.equal(app.badge.hidden, false);
-  assert.equal(app.notes.open, false, 'never interrupts with an automatic dialog');
-  app.listeners.toggle();
-  assert.equal(storage.size, 0, 'closing does not mark read');
-  app.notes.open = true; app.listeners.toggle();
+  assert.equal(storage.size, 0, 'loading notes does not mark them read before About is visited');
+  app.openAbout();
   assert.equal(app.badge.hidden, true);
   assert.equal(app.button['aria-label'], 'Settings');
   assert.equal(visit(storage).badge.hidden, true);
@@ -33,7 +32,7 @@ test('notes are new until opened, remain read on reload, and become new for a la
 
 test('reading works without storage and synchronizes between tabs', () => {
   const blocked = visit(new Map(), true);
-  blocked.notes.open = true; blocked.listeners.toggle();
+  blocked.openAbout();
   assert.equal(blocked.badge.hidden, true);
   const app = visit();
   app.listeners.storage({ key: 'unrelated', newValue: 'release-3' });

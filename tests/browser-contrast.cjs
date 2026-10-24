@@ -72,7 +72,7 @@ const base = process.env.PUSHUP_TEST_URL || 'http://localhost:5580';
       await audit('sign-in');
       await p.locator('#auth-submit').hover();await p.waitForTimeout(150);await audit('sign-in hover','#auth-submit');
       await p.mouse.down();await audit('sign-in pressed','#auth-submit');await p.mouse.up();
-      await p.locator('#gate [data-open-settings]').click();await p.locator('.settings-nav [href="#about-settings"]').click();await p.locator('#whats-new summary').click();await audit('signed-out settings','#settings');await p.locator('#settings-close').click();
+      await p.locator('#gate [data-open-settings]').click();await p.locator('.settings-nav [href="#about-settings"]').click();await audit('signed-out settings','#settings');await p.locator('#settings-close').click();
       await p.goto(base+'/forgot-password');await p.locator('#recovery').waitFor({state:'visible'});await audit('password recovery');
       await p.goto(base);await p.locator('[data-mode=register]').click();
       await p.locator('#auth-user').fill(`contrast_${theme}_${mode}_${Date.now()}`);await p.locator('#auth-pass').fill('contrast-test-password');await p.locator('#auth-submit').click();await p.locator('#app').waitFor({state:'visible'});
@@ -96,7 +96,6 @@ const base = process.env.PUSHUP_TEST_URL || 'http://localhost:5580';
         for (const id of ['appearance-settings','account-settings','about-settings','goal-settings']) {
           if (await p.locator('#settings-back').isVisible()) await p.locator('#settings-back').click();
           await p.locator(`.settings-nav [href="#${id}"]`).click();
-          if (id === 'about-settings' && !await p.locator('#whats-new').evaluate(el=>el.open)) await p.locator('#whats-new summary').click();
           await audit(id,'#settings');
         }
         await p.evaluate(()=>{const error=document.querySelector('#goal-settings-error');error.hidden=false;error.textContent='Reconnect to save a goal. Your saved targets still apply offline.'});
