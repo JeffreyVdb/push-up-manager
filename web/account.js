@@ -48,7 +48,11 @@ window.AppAccount = (() => {
       el("account-password").focus();
       return;
     }
-    if (action === "remove" && !window.confirm("Remove your recovery email? You will not be able to reset your password by email.")) return;
+    if (action === "remove" && !await confirmAction({
+      title: "Remove recovery email?",
+      message: "You will no longer be able to reset your password by email until you add and verify a recovery address again.",
+      action: "Remove email",
+    })) return;
     busy = true;
     const controls = [...el("account-email-form").querySelectorAll("button")];
     controls.forEach(button => { button.disabled = true; });
@@ -194,6 +198,7 @@ window.AppAccount = (() => {
   }
 
   function leave() {
+    window.PushupConfirm?.cancel();
     generation++;
     account = null;
     window.Passkeys?.clear();

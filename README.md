@@ -139,15 +139,58 @@ be passkey relying parties. Changing that domain changes the passkey identity.
 The default **ROOTED** theme uses sage, forest green, paper and lavender surfaces,
 with bundled Fraunces and Archivo fonts. The tough-love language stays intact.
 Open **Settings** on the sign-in screen or app header and enable **Classic theme**
-to restore the original dark **FLOOR** appearance.
+for the **FLOOR** appearance with orange accents and bold type. Both themes have
+light and dark variants. **Color mode** defaults to **System (automatic)**,
+following the device/browser's preferred color scheme and reacting to changes
+while the app is open. Choose **Light** or **Dark** to override it.
 
-The preference is saved in this browser under `pushup-counter:theme`, applied
-before styles load, and synchronized across tabs. It is independent of your
-account. If browser storage is blocked, switching still works for the current
-visit and Settings explains that the choice could not be saved.
+Settings groups these controls under **Appearance**, daily goals under
+**Training**, recovery email and passkeys under **Account & security**, and
+release notes under **About** at the end. Before sign-in, only Appearance and
+About are shown.
 
-The installed PWA keeps its plant-colored tally icon and sage launch colors in
-both themes; the in-app browser theme color and favicon follow your choice.
+Theme (`pushup-counter:theme`) and mode (`pushup-counter:mode`) are independent
+browser-local preferences, applied before styles load and synchronized across
+tabs. Existing theme choices are retained; missing or invalid mode preferences
+follow the system. They are independent of your account. If browser storage is
+blocked, both controls still work for the current visit and Settings explains
+that the choice could not be saved.
+
+The installed PWA keeps its plant-colored tally icon and sage launch colors;
+the in-app browser theme color follows the resolved mode, and the favicon follows
+the theme. The operating system controls installed-app splash screens.
+
+### Destructive actions and shared sheets
+
+Deleting a set or variation always requires confirmation. Variation deletion
+explicitly warns that all its sets across all days are removed. Saved-set discards,
+crew removal, request declines, recovery-email removal, and passkey removal use
+the same confirmation. Cancel has initial focus; Escape and tapping the backdrop
+cancel without mutation. Account changes cancel an outstanding confirmation.
+
+Confirmations appear as centered dialogs on desktop and bottom sheets below
+48rem. `web/sheet.js` shares focus management, scroll locking, background blocking,
+and dismissal with the mobile logging sheet; `.bottom-sheet` shares its palette,
+edge, keyboard inset, and safe-area spacing. Logging keeps its permanent desktop
+dock and does not dismiss from stray backdrop taps. `web/confirm.js` supplies the
+question and explicit action without duplicating the sheet behavior.
+
+### Release notes
+
+**Settings → About → What’s new** contains dated release notes, available before sign-in
+and offline. The Settings icon has a small indicator and an accessible label when
+there are unread notes; **What’s new** also shows **New**. Opening the notes marks
+the latest release read on this browser (`pushup-counter:release-read`) and syncs
+that state across tabs. It never opens automatically or interrupts a workout.
+
+Edit **`web/changelog.html`** for each user-facing release: prepend an article
+with a unique, stable `data-release` ID, a date, a short title, and concise changes.
+Keep older entries so users can catch up after skipping updates. This is trusted
+HTML maintained in the repository, with no Markdown renderer or content service.
+The Go binary embeds it into the app shell, so notes always match the loaded
+version and work offline. The existing asset hash updates the service-worker
+cache automatically; a rebuild without a new release ID does not show New again.
+
 
 ## Quick start
 
@@ -313,6 +356,23 @@ go vet ./...
 node --test tests/*.test.cjs   # dates, themes, offline queue, SW and passkeys
 go run ./tools/genicons   # redraw the app icons
 ```
+
+`tests/browser-appearance.cjs` checks all four theme/mode pairs, live system
+changes, independent persistence, cross-tab sync, denied storage, draft retention,
+text-token contrast, control-boundary contrast, and offline release notes (default port `5580`). Use
+`PUSHUP_SCREENSHOTS` to capture phone and desktop views.
+`tests/browser-contrast.cjs` audits rendered text with axe-core across sign-in,
+recovery, account settings, release notes, goals, logging, the variation picker,
+both boards, and destructive confirmations, including hover/pressed states and desktop/phone layouts.
+Set `AXE_CORE_MODULE` to the installed `axe-core/axe.min.js` path, alongside
+`PLAYWRIGHT_MODULE` if Playwright is not on the module path. The JSON report path
+is configurable with `PUSHUP_CONTRAST_REPORT`.
+
+`tests/browser-confirmation.cjs` checks Cancel/Enter/Escape/backdrop behavior,
+focus return, dialog/sheet positioning, exactly-once set and cascading variation
+deletion, nested Settings, account changes, and shared logging-sheet behavior.
+`tests/browser-navigation.cjs` checks native tap highlights, centered tab labels
+and underline geometry, and keyboard focus in every theme/mode combination.
 
 `tests/browser-flows.cjs` exercises real browser registration, permanent reminder
 dismissal, WebAuthn with a virtual authenticator, offline reload/sync, and recovery

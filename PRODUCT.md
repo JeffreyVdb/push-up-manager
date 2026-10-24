@@ -45,6 +45,8 @@ Not a general fitness tracker. One movement, tracked honestly, with an interface
 - The server's date remains authoritative. Soft refresh at midnight, at least once a minute while visible, and on return keeps the calendar and leaderboard current. Returning after five minutes away selects today without clearing draft reps; live background updates preserve deliberate history browsing.
 - Must be mobile-friendly and a progressive web app. After an online sign-in, log sets offline even after reloading, retain their original day, and sync without duplicates on reconnect or reopening. Browser-local caches and pending sets are isolated by account; variations, crew and deletion of synced entries still require a connection. *(Offline logging requested 2026-10-23.)*
 - Service workers and PWA install require a secure context: full PWA behavior works on `localhost` and over HTTPS, and degrades to a plain web app over LAN HTTP.
+- **What’s new** lives in Settings, with a **New** indicator and an accessible unread marker on the Settings control. Opening the notes marks the current release read locally. Release notes ship in the binary, remain available offline, and retain older entries for skipped updates; no automatic update dialog interrupts logging. *(Explicit user choice, 2026-10-24.)*
+- Destructive actions always require confirmation: deleting sets or variations, discarding saved pending sets, removing crew members, declining friend requests, and removing recovery email or passkeys. Use a desktop dialog and a mobile bottom sheet, sharing the existing logging sheet’s surface and lifecycle. Default focus is Cancel; Escape/backdrop dismissal cancels. Account changes invalidate pending approvals. *(Explicit user direction, 2026-10-24.)*
 - Database lives in systemd's `StateDirectory` (`~/.local/state/pushup-counter/pushups.db`).
 
 ## Brand Commitments
@@ -53,7 +55,7 @@ Name: **Push-Up Counter**. The default visual world is **ROOTED**, a plant-based
 
 Voice remains rough, brutal, David Goggins hard-mentality: imperative, unsentimental, no congratulation for the minimum. Keep direct commands and existing competitive language, including `LOG IT`, “No zero days.” and “Reps get logged or they did not happen.” The botanical presentation does not soften that voice. *(Explicit user constraint, reaffirmed 2026-10-23.)*
 
-The original dark **FLOOR** appearance remains available through the **Classic theme** switch in Settings, both before and after sign-in. The choice belongs to the browser, persists locally when storage is available, and synchronizes across tabs. It is not an account preference or a server setting. The plant theme is the default; logging, account, variation, and crew behavior are shared by both themes.
+The original **FLOOR** appearance remains available through the **Classic theme** switch in Settings, both before and after sign-in. Plant and Classic each have light and dark variants. A separate **System / Light / Dark** mode defaults to System and follows the operating system’s current appearance, including live changes. Both preferences belong to the browser, persist locally when storage is available, and synchronize across tabs. They are not account preferences or server settings. Plant remains the default theme; logging, account, variation, and crew behavior are shared by both themes. *(Explicit user direction, 2026-10-24.)*
 
 ## Evidence on Hand
 
@@ -68,5 +70,7 @@ None. There are no testimonials, user counts, benchmarks, or third-party claims,
 5. **Thumb-first.** Every primary control is reachable and large enough to hit while out of breath.
 
 ## Accessibility & Inclusion
+
+All four theme/mode combinations must preserve readable text and visible controls: normal text contrast at least 4.5:1 and necessary control boundaries at least 3:1 against their adjacent surfaces. Browser-blue tap flashes are suppressed in favor of themed feedback and visible keyboard focus. *(Explicit user emphasis, 2026-10-24.)*
 
 Touch targets at least 48×48 CSS px, met from 390 px up. The one exception is arithmetic: a seven-column month grid cannot reach 48 px wide at a 320 px viewport without horizontal scroll, so calendar cells land at 39×48 there. Pinch zoom preserved. Calendar intensity never the only channel — every day carries its numeric total and a full accessible name. Leaderboard bar length is likewise never the only channel: every row shows its number, and each row has a full accessible name naming its rank. Both tab sets follow the ARIA tabs pattern with a roving tabindex, and an incoming friend request is announced by a labelled region rather than by colour alone.

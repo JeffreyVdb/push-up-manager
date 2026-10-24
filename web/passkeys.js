@@ -74,7 +74,7 @@
     if (!root || mounted) return;
     mounted = true;
     root.innerHTML = `
-      <h3 class="band-title">Passkeys</h3>
+      <h4 class="settings-subtitle">Passkeys</h4>
       <p class="hint">Use your fingerprint, face or device PIN to sign in. Keep your password for account changes.</p>
       <p id="passkey-availability" class="hint"></p>
       <ul id="passkey-list" class="passkey-list" aria-label="Your passkeys"></ul>
@@ -115,7 +115,11 @@
     if (busy || !available) return;
     const input = byID("passkey-password");
     if (!input.value) { message("Enter your current password before removing a passkey.", true); input.focus(); return; }
-    if (!window.confirm(`Remove “${key.name}”? You will no longer be able to sign in with this passkey.`)) return;
+    if (!await confirmAction({
+      title: "Remove passkey?",
+      message: `Remove “${key.name}”? You will no longer be able to sign in with this passkey.`,
+      action: "Remove passkey",
+    })) return;
     const password = input.value; input.value = "";
     const generation = accountGeneration;
     setBusy(true);

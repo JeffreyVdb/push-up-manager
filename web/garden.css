@@ -27,15 +27,20 @@
 }
 .settings::backdrop { background: rgb(7 24 17 / .6); }
 .settings-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-.settings-head .band-title { padding: 0; }
+.settings-head .band-title { padding: 0; font-size: 1.5rem; }
 .settings-intro { margin: .5rem 0 1.5rem; color: var(--ash); }
+.settings-section { padding-block: 1.5rem; }
+.settings-section + .settings-section { border-top: 1px solid var(--rule); }
+.settings-section:last-child { padding-bottom: 0; }
+.settings-section > .band-title { padding: 0; margin-bottom: 1.25rem; }
+.settings-subtitle { margin: 0 0 .75rem; font: 600 1rem/1.5 var(--text); }
+.settings-section > .hint { margin-top: 1rem; overflow-wrap: anywhere; }
+.settings-section > .alert { margin-top: 1rem; }
 .theme-setting {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  padding: 1.25rem 0;
-  border-block: 1px solid var(--rule);
   cursor: pointer;
   min-height: 48px;
 }
@@ -73,7 +78,6 @@
 }
 .theme-switch:checked::before { background: var(--signal); border-color: var(--signal); }
 .theme-switch:checked::after { background: var(--ink); transform: translateX(22px); }
-.settings > .hint { margin-top: 1rem; }
 
 :root[data-theme="plant"] {
   color-scheme: light;
@@ -81,12 +85,18 @@
   --slab: #fcfdf8;
   --slab-2: #e1eadb;
   --rule: #c6d3bd;
+  --control-rule: #74866a;
   --bone: #203d2e;
   --ash: #52634e;
   --signal: #356443;
   --signal-deep: #264b32;
   --signal-mid: #648052;
   --warn: #9a3f24;
+  --on-signal: #fcfdf8;
+  --on-signal-pressed: #fcfdf8;
+  --selection: #cadba9;
+  --day-rule: #cfc5d6;
+  --day-muted: #62546a;
   --heat-0: #f0f3e9;
   --heat-1: #e1ebcf;
   --heat-2: #c4db9d;
@@ -96,11 +106,12 @@
   --display: "Fraunces", Georgia, serif;
   --petal: #ece7f1;
   --plum: #665270;
+  --sheet-backdrop: rgb(7 24 17 / .6);
   --shadow-lift: 0 -12px 36px -20px rgb(32 61 46 / .22);
 }
 
 :where([data-theme="plant"]) body { font-size: .9375rem; }
-:where([data-theme="plant"]) ::selection { background: #cadba9; color: var(--bone); }
+:where([data-theme="plant"]) ::selection { background: var(--selection); color: var(--bone); }
 :where([data-theme="plant"]) .ico { stroke-linecap: round; stroke-linejoin: round; }
 :where([data-theme="plant"]) .wordmark {
   font-weight: 600;
@@ -123,11 +134,11 @@
   font-weight: 600;
 }
 :where([data-theme="plant"]) .btn { border-radius: 8px; }
-:where([data-theme="plant"]) .btn-primary { color: var(--slab); }
+:where([data-theme="plant"]) .btn-primary { color: var(--on-signal); }
 :where([data-theme="plant"]) .btn-primary:hover,
 :where([data-theme="plant"]) .fab:hover { background: var(--signal-deep); }
 :where([data-theme="plant"]) .btn-primary:active,
-:where([data-theme="plant"]) .fab:active { color: var(--slab); }
+:where([data-theme="plant"]) .fab:active { color: var(--on-signal); }
 :where([data-theme="plant"]) .btn-icon { border-radius: 50%; }
 :where([data-theme="plant"]) .btn-icon:hover { background: var(--slab-2); }
 :where([data-theme="plant"]) .btn-sm { min-height: 48px; }
@@ -162,7 +173,7 @@
 :where([data-theme="plant"]) .who { letter-spacing: 0; text-transform: none; max-width: 9rem; }
 :where([data-theme="plant"]) .viewnav { gap: 1rem; }
 :where([data-theme="plant"]) .vtab { min-width: 64px; }
-:where([data-theme="plant"]) .badge { border-radius: 50%; color: var(--slab); }
+:where([data-theme="plant"]) .badge { border-radius: 50%; color: var(--on-signal); }
 :where([data-theme="plant"]) .sheet { max-width: 76rem; padding: 2.5rem 2rem 14rem; }
 :where([data-theme="plant"]) #view-log {
   display: grid;
@@ -217,7 +228,7 @@
 :where([data-theme="plant"]) .heat-scale { height: 8px; border-radius: 4px; }
 
 /* The selected day gets a quiet secondary colour; variations stay unboxed. */
-:where([data-theme="plant"]) .day-band { grid-area: day; padding: 1.5rem; background: var(--petal); border-radius: 16px; --rule: #cfc5d6; --ash: #62546a; }
+:where([data-theme="plant"]) .day-band { grid-area: day; padding: 1.5rem; background: var(--petal); border-radius: 16px; --rule: var(--day-rule); --ash: var(--day-muted); }
 :where([data-theme="plant"]) .day-band .band-title { color: var(--plum); }
 :where([data-theme="plant"]) .daylabel { align-items: center; margin-bottom: 1rem; }
 :where([data-theme="plant"]) .daylabel strong { font-size: .6875rem; letter-spacing: .01em; font-weight: 500; }
@@ -232,7 +243,7 @@
 :where([data-theme="plant"]) .tail { font: 500 .75rem var(--text); color: var(--ash); -webkit-text-stroke: 0; letter-spacing: .04em; padding-top: 2.5rem; }
 
 /* Logging keeps the original one-thumb sheet and quick keys. */
-:where([data-theme="plant"]) .logbar { border-top: 1px solid var(--rule); }
+:where([data-theme="plant"]) .bottom-sheet { border-top: 1px solid var(--rule); }
 :where([data-theme="plant"]) .logbar-inner { max-width: 76rem; }
 :where([data-theme="plant"]) .type-trigger { background: var(--ink); border-radius: 8px; }
 :where([data-theme="plant"]) .counter input { font-family: var(--display); font-weight: 500; color: var(--bone); }
@@ -249,13 +260,13 @@
   align-items: center;
   gap: .5rem;
   padding-inline: 1.25rem;
-  color: var(--slab);
+  color: var(--on-signal);
   font: 600 .875rem var(--text);
   box-shadow: 0 8px 24px -8px rgb(32 61 46 / .35);
 }
 :where([data-theme="plant"]) .fab .ico { width: 1.25rem; height: 1.25rem; }
 :where([data-theme="plant"]) .picker-panel { border-radius: 12px; }
-:where([data-theme="plant"]) .opt[aria-selected="true"] { color: var(--slab); }
+:where([data-theme="plant"]) .opt[aria-selected="true"] { color: var(--on-signal); }
 :where([data-theme="plant"]) .toast { border-radius: 8px; letter-spacing: .02em; }
 
 /* Crew: a shared growing season, with all the original competitive language. */
@@ -324,7 +335,7 @@
   :where([data-theme="plant"]) .day .d { font-size: .625rem; }
   :where([data-theme="plant"]) .legend { padding-right: .5rem; margin-top: .75rem; }
   :where([data-theme="plant"]) .day-band { padding: 1.25rem; }
-  :where([data-theme="plant"]) .logbar { border-radius: 16px 16px 0 0; }
+  :where([data-theme="plant"]) .bottom-sheet { border-radius: 16px 16px 0 0; }
   :where([data-theme="plant"]) .logbar-inner { padding-top: 1rem; }
   :where([data-theme="plant"]) .picker-panel { border-radius: 0; }
   :where([data-theme="plant"]) #view-crew { display: flex; flex-direction: column; gap: 2rem; }
@@ -345,8 +356,7 @@
 .auth-alternatives { display: grid; gap: .75rem; margin-top: 1.25rem; }
 .auth-alternatives a, .recovery-back { text-decoration: none; }
 .recovery-back { margin-top: 1.5rem; }
-.account-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--rule); }
-.account-section .band-title { padding: 0; margin-bottom: .75rem; }
+.account-section + .account-section { margin-top: 2rem; }
 .account-section > .hint { margin-bottom: 1.25rem; overflow-wrap: anywhere; }
 .account-section .alert { margin-top: 1rem; }
 .account-actions { display: flex; flex-wrap: wrap; gap: .5rem; }

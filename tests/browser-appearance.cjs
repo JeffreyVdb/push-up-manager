@@ -1,0 +1,106 @@
+// Run against a disposable server; creates one account and a logged set.
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const base = process.env.PUSHUP_TEST_URL || 'http://localhost:5580';
+const captures = process.env.PUSHUP_SCREENSHOTS;
+(async () => {
+  const browser = await chromium.launch({headless:true,...(process.env.CHROMIUM_PATH ? {executablePath:process.env.CHROMIUM_PATH}:{}),args:['--no-sandbox']});
+  try {
+    const ctx = await browser.newContext({viewport:{width:1440,height:1000},colorScheme:'dark',reducedMotion:'reduce'});
+    const page = await ctx.newPage();
+    const errors = []; page.on('pageerror', e=>errors.push(e.message));
+    await page.route('**/api/quotes', r=>r.fulfill({json:{quotes:[]}}));
+    await page.goto(base); await page.locator('#gate').waitFor({state:'visible'});
+    assert.equal(await page.locator('html').getAttribute('data-mode'),'dark');
+    await page.locator('#gate [data-open-settings]').click();
+    assert.equal(await page.locator('#color-mode').inputValue(),'system');
+    assert.equal(await page.locator('#whats-new').getAttribute('open'),null);
+    assert.equal(await page.locator('#release-unread').isVisible(),true);
+    await page.locator('#whats-new summary').click();
+    await page.waitForFunction(()=>document.querySelector('#release-unread').hidden);
+    assert.match(await page.locator('#whats-new').textContent(),/Both Plant and Classic/);
+    await page.locator('#classic-theme').check();
+    await page.locator('#color-mode').selectOption('light');
+    assert.equal(await page.locator('html').getAttribute('data-theme'),'classic');
+    assert.equal(await page.locator('html').getAttribute('data-mode'),'light');
+    await page.reload(); await page.locator('#gate').waitFor({state:'visible'});
+    assert.equal(await page.locator('html').getAttribute('data-mode'),'light');
+    await page.locator('#gate [data-open-settings]').click();
+    assert.equal(await page.locator('#release-unread').isVisible(),false);
+    await page.locator('#color-mode').selectOption('system');
+    assert.equal(await page.locator('html').getAttribute('data-mode'),'dark');
+    await page.emulateMedia({colorScheme:'light'});
+    await page.waitForFunction(()=>document.documentElement.dataset.mode==='light');
+    await page.emulateMedia({colorScheme:'dark'});
+    await page.waitForFunction(()=>document.documentElement.dataset.mode==='dark');
+    const other = await ctx.newPage(); await other.goto(base);
+    await page.locator('#color-mode').selectOption('light');
+    await other.waitForFunction(()=>document.documentElement.dataset.mode==='light');
+    await page.locator('#classic-theme').uncheck();
+    await other.waitForFunction(()=>document.documentElement.dataset.theme==='plant');
+    await other.close();
+    await page.keyboard.press('Escape');
+    assert.equal(await page.locator('#settings').isVisible(),false);
+    await page.locator('[data-mode=register]').click();
+    await page.locator('#auth-user').fill(`appearance_${Date.now()}`);
+    await page.locator('#auth-pass').fill('appearance-test-password');
+    await page.locator('#auth-submit').click();
+    await page.locator('#app').waitFor({state:'visible'});
+    await page.locator('#email-prompt-dismiss').click();
+    await page.locator('#reps').fill('20'); await page.locator('#log-submit').click();
+    await page.waitForFunction(()=>document.querySelector('#day-total').textContent==='20');
+    await page.locator('#sync-status').waitFor({state:'hidden'});
+    await page.locator('#toast').waitFor({state:'hidden'});
+    await page.evaluate(()=>document.fonts.ready);
+    await page.locator('#reps').fill('12');
+    if(captures) fs.mkdirSync(captures,{recursive:true});
+    for(const theme of ['plant','classic']) for(const mode of ['light','dark']) {
+      await page.evaluate(({theme,mode})=>{window.PushupTheme.set(theme);window.PushupTheme.setMode(mode)},{theme,mode});
+      assert.equal(await page.locator('#reps').inputValue(),'12','appearance preserves draft');
+      const contrast = await page.evaluate(() => {
+        const s = getComputedStyle(document.documentElement);
+        const v = name => s.getPropertyValue(name).trim();
+        const lum = hex => {const rgb=hex.match(/[a-f\d]{2}/gi).map(n=>parseInt(n,16)/255).map(n=>n<=.04045?n/12.92:((n+.055)/1.055)**2.4); return rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722;};
+        const pairs=[['--bone','--ink'],['--ash','--ink'],['--ash','--slab'],['--bone','--slab'],['--on-signal','--signal'],['--on-signal-pressed','--signal-deep'],['--heat-ink','--heat-1'],['--heat-ink','--heat-2'],['--heat-ink','--heat-3'],['--heat-ink','--heat-4']];
+        if(document.documentElement.dataset.theme==='plant') pairs.push(['--day-muted','--petal'],['--plum','--petal']);
+        return pairs.map(([fg,bg])=>{const a=lum(v(fg)),b=lum(v(bg));return {fg,bg,minimum:4.5,ratio:(Math.max(a,b)+.05)/(Math.min(a,b)+.05)}}).concat(['--ink','--slab','--slab-2'].map(bg=>{const a=lum(v('--control-rule')),b=lum(v(bg));return {fg:'--control-rule',bg,minimum:3,ratio:(Math.max(a,b)+.05)/(Math.min(a,b)+.05)}}));
+      });
+      for(const pair of contrast) assert.ok(pair.ratio>=pair.minimum,`${theme} ${mode}: ${pair.fg}/${pair.bg} contrast ${pair.ratio}`);
+      await page.setViewportSize({width:1440,height:1000});
+      await page.evaluate(()=>window.scrollTo(0,0));
+      if(captures) await page.screenshot({path:`${captures}/${theme}-${mode}-desktop.png`,fullPage:true});
+      await page.setViewportSize({width:390,height:844});
+      await page.waitForTimeout(400); // settle the existing dock-to-sheet resize handler
+      await page.evaluate(()=>window.scrollTo(0,0));
+      if(captures) await page.screenshot({path:`${captures}/${theme}-${mode}-mobile.png`,fullPage:true});
+      await page.locator('#app [data-open-settings]').click();
+      if(!await page.locator('#whats-new').evaluate(el=>el.open)) await page.locator('#whats-new summary').click();
+      if(captures) await page.screenshot({path:`${captures}/${theme}-${mode}-settings.png`});
+      await page.locator('#settings-close').click();
+      await page.setViewportSize({width:320,height:760});
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${theme} ${mode} at 320px`);
+    }
+    await page.evaluate(()=>navigator.serviceWorker.ready);
+    await ctx.setOffline(true); await page.reload();
+    await page.locator('#app').waitFor({state:'visible'});
+    assert.equal(await page.locator('html').getAttribute('data-mode'),'dark');
+    await page.locator('#app [data-open-settings]').click();
+    await page.locator('#color-mode').selectOption('light');
+    await page.locator('#whats-new summary').click();
+    assert.match(await page.locator('#whats-new').textContent(),/Both Plant and Classic/);
+    assert.equal(await page.locator('html').getAttribute('data-mode'),'light');
+    // Storage failure must still leave appearance controls usable.
+    const blocked = await browser.newContext({colorScheme:'dark'});
+    await blocked.addInitScript(()=>Object.defineProperty(window,'localStorage',{get(){throw new Error('Storage denied')}}));
+    const denied = await blocked.newPage(); await denied.goto(base);
+    await denied.locator('#gate').waitFor({state:'visible'});
+    await denied.locator('#gate [data-open-settings]').click();
+    await denied.locator('#color-mode').selectOption('light');
+    assert.match(await denied.locator('#theme-status').textContent(),/for this visit/);
+    assert.equal(await denied.locator('html').getAttribute('data-mode'),'light');
+    await blocked.close();
+    assert.deepEqual(errors,[]);
+    console.log('All four palettes, contrast, system changes, persistence, cross-tab sync, drafts, offline notes and denied storage passed.');
+  } finally { await browser.close(); }
+})().catch(e=>{console.error(e);process.exit(1)});

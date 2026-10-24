@@ -25,12 +25,18 @@
   --slab: #101311;
   --slab-2: #171b19;
   --rule: #2a302c;
+  --control-rule: #77867b;
   --bone: #efede6;
   --ash: #9aa29c;
   --signal: #ff4b12;
   --signal-deep: #b32b06;
   --signal-mid: #d13c0c;
   --warn: #ffc53d;
+  --on-signal: #070807;
+  --on-signal-pressed: #efede6;
+  --signal-hover: #ff6534;
+  --placeholder: #9aa29c;
+  --tail-rule: #9aa29c;
 
   --heat-0: #141715;
   --heat-1: #8caeb8;
@@ -47,6 +53,7 @@
   --safe-l: env(safe-area-inset-left, 0px);
   --safe-r: env(safe-area-inset-right, 0px);
 
+  --sheet-backdrop: rgb(0 0 0 / .68);
   --shadow-lift: 0 -18px 40px -24px rgb(0 0 0 / .95);
   --ease: cubic-bezier(.16, 1, .3, 1);
 }
@@ -73,7 +80,7 @@ body {
 }
 
 /* ---- browser surfaces: themed, not defaulted ---- */
-::selection { background: var(--signal); color: var(--ink); }
+::selection { background: var(--signal); color: var(--on-signal); }
 :root { accent-color: var(--signal); caret-color: var(--signal); scrollbar-color: var(--rule) var(--ink); }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 /* The stepper arrows ship unstyled and read as someone else's UI. */
@@ -83,6 +90,8 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--rule); border: 2px solid var(--ink); }
 ::-webkit-scrollbar-thumb:hover { background: var(--signal-deep); }
 a { color: var(--signal); text-underline-offset: 3px; }
+/* Use the themed pressed/focus states instead of the browser’s blue tap flash. */
+button, a, summary, [role="option"] { -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
 
 .sprite { position: absolute; width: 0; height: 0; }
@@ -170,10 +179,10 @@ a { color: var(--signal); text-underline-offset: 3px; }
   touch-action: manipulation;
   transition: background-color .12s linear, color .12s linear, border-color .12s linear;
 }
-.btn-primary { background: var(--signal); color: var(--ink); font-weight: 800; }
-.btn-primary:hover { background: #ff6534; }
-.btn-primary:active { background: var(--signal-deep); color: var(--bone); }
-.btn-outline { border-color: var(--rule); color: var(--bone); }
+.btn-primary { background: var(--signal); color: var(--on-signal); font-weight: 800; }
+.btn-primary:hover { background: var(--signal-hover); }
+.btn-primary:active { background: var(--signal-deep); color: var(--on-signal-pressed); }
+.btn-outline { border-color: var(--control-rule); color: var(--bone); }
 .btn-outline:hover { border-color: var(--signal); color: var(--signal); }
 .btn-ghost { color: var(--ash); }
 .btn-ghost:hover { color: var(--signal); }
@@ -186,7 +195,8 @@ a { color: var(--signal); text-underline-offset: 3px; }
   font-weight: 600;
   font-size: .6875rem;
   letter-spacing: .08em;
-  opacity: .72;
+  /* The date is small text on an action fill; keep full text contrast. */
+  opacity: 1;
 }
 
 /* ============================================================
@@ -208,13 +218,13 @@ input[type="text"], input[type="password"], input[type="email"], #goal-target {
   min-height: 52px;
   padding: 0 .875rem;
   background: var(--slab-2);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--control-rule);
   border-radius: 0;
   color: var(--bone);
   font: inherit;
   font-size: 1rem;
 }
-input::placeholder { color: #6d766f; }
+input::placeholder { color: var(--placeholder); }
 input:focus-visible { border-color: var(--signal); outline-offset: 0; }
 .hint { display: block; margin-top: .375rem; color: var(--ash); font-size: .8125rem; }
 
@@ -313,6 +323,7 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
   min-height: 48px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: .375rem;
   font-family: var(--display);
   font-size: .9375rem;
@@ -348,7 +359,7 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
   display: inline-grid;
   place-items: center;
   background: var(--signal);
-  color: var(--ink);
+  color: var(--on-signal);
   font-family: var(--text);
   font-size: .6875rem;
   font-weight: 800;
@@ -582,7 +593,7 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
   line-height: .9;
   letter-spacing: -.03em;
   color: transparent;
-  -webkit-text-stroke: 1px #3d443f;
+  -webkit-text-stroke: 1px var(--tail-rule);
   text-align: center;
   padding: 1rem 0 0;
 }
@@ -592,17 +603,21 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
    ============================================================ */
 /* Mobile: a sheet that stays out of the way until the user asks for it.
    Desktop (see the wide-screen block) docks it permanently instead. */
-.logbar {
+.bottom-sheet {
   position: fixed;
   left: 0; right: 0;
   /* --kb-inset is the on-screen keyboard's height, published by app.js from
      the VisualViewport. It stays 0 where the browser already shrinks the
      layout viewport (interactive-widget=resizes-content). */
   bottom: var(--kb-inset, 0px);
-  z-index: 30;
   background: var(--slab);
   border-top: 3px solid var(--signal);
   box-shadow: var(--shadow-lift);
+  --sheet-safe-bottom: calc(.75rem + var(--safe-b));
+}
+.bottom-sheet::backdrop { background: var(--sheet-backdrop); }
+.logbar {
+  z-index: 30;
   transform: translateY(110%);
   visibility: hidden;
   transition: transform .34s var(--ease), visibility 0s linear .34s;
@@ -628,7 +643,7 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
   inset: 0;
   bottom: var(--kb-inset, 0px);
   z-index: 20;
-  background: rgb(0 0 0 / .68);
+  background: var(--sheet-backdrop);
   opacity: 0;
   transition: opacity .34s var(--ease);
 }
@@ -646,7 +661,7 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
   border-radius: 50%;
   border: 0;
   background: var(--signal);
-  color: var(--ink);
+  color: var(--on-signal);
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -654,14 +669,14 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
   box-shadow: 0 14px 32px -12px rgb(0 0 0 / .95);
   transition: transform .2s var(--ease), background-color .12s linear, opacity .2s linear;
 }
-.fab:hover { background: #ff6534; }
-.fab:active { transform: scale(.94); background: var(--signal-deep); color: var(--bone); }
+.fab:hover { background: var(--signal-hover); }
+.fab:active { transform: scale(.94); background: var(--signal-deep); color: var(--on-signal-pressed); }
 .fab.is-hidden { opacity: 0; transform: scale(.8); pointer-events: none; }
 .ico-lg { width: 1.75rem; height: 1.75rem; stroke-width: 2.25; }
 .logbar-inner {
   max-width: 40rem;
   margin: 0 auto;
-  padding: .75rem calc(1rem + var(--safe-r)) calc(.75rem + var(--safe-b)) calc(1rem + var(--safe-l));
+  padding: .75rem calc(1rem + var(--safe-r)) var(--sheet-safe-bottom) calc(1rem + var(--safe-l));
   display: grid;
   gap: .625rem;
   /* If a small phone plus a tall keyboard leaves too little room, only the
@@ -693,7 +708,7 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
   min-height: 52px;
   padding: 0 .875rem;
   background: var(--slab-2);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--control-rule);
   border-radius: 0;
   color: var(--bone);
   font: inherit;
@@ -810,7 +825,7 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
   height: 100%;
   min-height: 76px;
   background: var(--slab-2);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--control-rule);
   color: var(--signal);
   font-family: var(--display);
   font-weight: 900;
@@ -827,7 +842,7 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
   min-height: 52px;
   min-width: 56px;
   background: none;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--control-rule);
   border-radius: 0;
   color: var(--bone);
   font: inherit;
@@ -840,7 +855,7 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
 }
 .qk:hover { border-color: var(--signal); color: var(--signal); }
 .qk:active,
-.qk.is-press { background: var(--signal); color: var(--ink); border-color: var(--signal); }
+.qk.is-press { background: var(--signal); color: var(--on-signal); border-color: var(--signal); }
 .qk-wipe { color: var(--ash); }
 
 /* ============================================================
@@ -853,7 +868,7 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
   transform: translateX(-50%);
   z-index: 20;
   background: var(--bone);
-  color: var(--ink);
+  color: var(--on-signal);
   font-weight: 800;
   font-size: .8125rem;
   letter-spacing: .08em;
@@ -1170,10 +1185,10 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
 
 /* All-user records extend the existing board in both themes. */
 .board-scopes { display: flex; gap: .5rem; flex-wrap: wrap; }
-.board-scopes [aria-pressed="true"] { background: var(--signal); color: var(--ink); border-color: var(--signal); }
+.board-scopes [aria-pressed="true"] { background: var(--signal); color: var(--on-signal); border-color: var(--signal); }
 #leaderboard-metric {
   width: 100%; min-width: 0; min-height: 52px; padding: .75rem .5rem;
-  border: 1px solid var(--rule); background: var(--slab); color: var(--bone);
+  border: 1px solid var(--control-rule); background: var(--slab); color: var(--bone);
   font: inherit; font-size: 1rem; cursor: pointer;
 }
 .leaderboard-note { color: var(--ash); font-size: .875rem; line-height: 1.5; margin: .75rem 0 1.25rem; max-width: 65ch; }
@@ -1184,7 +1199,7 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
 #global-board .lb-who { white-space: normal; overflow: visible; }
 #global-board .lb-num { white-space: nowrap; }
 #global-board .lb-unit { font: 400 .75rem var(--text); color: var(--ash); display: block; margin-top: .3rem; text-align: right; }
-:where([data-theme="plant"]) .board-scopes [aria-pressed="true"] { color: var(--slab); }
+:where([data-theme="plant"]) .board-scopes [aria-pressed="true"] { color: var(--on-signal); }
 :where([data-theme="plant"]) #leaderboard-metric { border-radius: 8px; }
 @media (max-width: 359px) {
   :where([data-theme="classic"]) .topbar { padding-inline: max(.5rem, var(--safe-l)) max(.5rem, var(--safe-r)); }

@@ -38,6 +38,50 @@ colors:
   classic-heat-mid: "#b7bf91"
   classic-heat-warm: "#efbe62"
   classic-heat-text: "#1a0a04"
+  control-rule: "#74866a"
+  classic-control-rule: "#77867b"
+  classic-signal-hover: "#ff6534"
+  plant-dark-ink: "#111b15"
+  plant-dark-slab: "#1b2920"
+  plant-dark-slab-2: "#28392b"
+  plant-dark-rule: "#475c48"
+  plant-dark-control-rule: "#789071"
+  plant-dark-bone: "#e4eddc"
+  plant-dark-ash: "#a8bda5"
+  plant-dark-signal: "#a8ce91"
+  plant-dark-signal-deep: "#bedfa8"
+  plant-dark-signal-mid: "#799b68"
+  plant-dark-warn: "#ffb49b"
+  plant-dark-on-signal: "#172711"
+  plant-dark-on-signal-pressed: "#172711"
+  plant-dark-heat-0: "#233026"
+  plant-dark-heat-1: "#8cae79"
+  plant-dark-heat-2: "#9cbf80"
+  plant-dark-heat-3: "#b6cf90"
+  plant-dark-heat-4: "#c7dfa2"
+  plant-dark-heat-ink: "#172711"
+  plant-dark-petal: "#29232f"
+  plant-dark-plum: "#d5c2df"
+  plant-dark-day-rule: "#534759"
+  plant-dark-day-muted: "#c0b0c9"
+  plant-dark-selection: "#42583a"
+  classic-light-ink: "#f3f1ea"
+  classic-light-slab: "#fffef9"
+  classic-light-slab-2: "#e7e5dd"
+  classic-light-rule: "#c5c7bd"
+  classic-light-control-rule: "#777e71"
+  classic-light-bone: "#20251f"
+  classic-light-ash: "#5a635a"
+  classic-light-signal: "#b8320b"
+  classic-light-signal-deep: "#922707"
+  classic-light-signal-hover: "#a42c08"
+  classic-light-signal-mid: "#ce5936"
+  classic-light-warn: "#8c410b"
+  classic-light-on-signal: "#fffef9"
+  classic-light-on-signal-pressed: "#fffef9"
+  classic-light-placeholder: "#5a635a"
+  classic-light-tail-rule: "#5a635a"
+  classic-light-heat-0: "#e8e9e1"
 typography:
   display:
     fontFamily: '"Fraunces", Georgia, serif'
@@ -148,22 +192,23 @@ ROOTED is the default plant-based visual world: a sage working surface, paper ca
 
 The user explicitly kept the tough-love language. Botanical form and unsentimental commands coexist: “No zero days.”, “Reps get logged or they did not happen.” and `LOG IT` remain direct. This identity introduces no dietary, health, or performance claims.
 
-The original FLOOR world remains a complete Classic theme: dark concrete, oxide orange, condensed display type, hard edges and stacked bands. `web/app.css` retains that system and shared behavior; `web/garden.css` scopes the new appearance to `data-theme="plant"`. New visual work must preserve that boundary.
+The original FLOOR world remains a complete Classic theme: concrete surfaces, oxide orange, condensed display type, hard edges and stacked bands. Both worlds have light and dark modes. `web/app.css` retains Classic and shared behavior; `web/garden.css` scopes ROOTED to `data-theme="plant"`; `web/appearance.css` supplies mode overrides through `data-mode`. Mode changes color roles while preserving each world’s typography, shapes and layout.
 
 **Key Characteristics:**
 
-- Sage page, paper calendar, lavender selected day, forest actions.
+- Botanical grounds, a distinct selected-day panel and green actions in ROOTED; concrete and oxide orange in Classic.
+- Independent light/dark modes, following the operating system by default.
 - Fraunces display and numbers; Archivo text and controls.
 - A task grid on desktop and a thumb-first stack on mobile.
 - The same rough imperative voice and logging workflow in both themes.
 
 ## Colors
 
-The default palette pairs pale botanical grounds with dark green text; lavender identifies the selected-day workspace without competing with the action color. The frontmatter owns exact values, extracted from `web/garden.css`; its `classic-*` entries record the retained values from `web/app.css`.
+ROOTED light pairs pale botanical grounds with dark green text; ROOTED dark uses deep green grounds, pale leaf actions and a dark plum selected-day workspace. Classic pairs concrete grounds with oxide orange in either mode. The frontmatter owns exact values: unprefixed tokens record ROOTED light from `web/garden.css`, the original `classic-*` tokens record Classic dark from `web/app.css`, and `plant-dark-*` / `classic-light-*` record the overrides in `web/appearance.css`. Mode overrides inherit unchanged roles, including Classic’s logged-day heat ramp.
 
 ### Primary
 
-- **Forest** (`--signal`) identifies primary actions, focus, current-day outline and active rails. **Deep forest** (`--signal-deep`) handles hover and pressed actions.
+- **Forest** (`--signal`) identifies primary actions, focus, current-day outline and active rails. **Deep forest** (`--signal-deep`) handles hover and pressed actions in light mode; the dark variant brightens this role.
 - **Leaf bar** (`--signal-mid`) fills non-leader bars; the leader uses forest. Keep the visible track and printed totals.
 - The calendar ramps from **shoot** through **sprout** and **leaf** to **full leaf** (`--heat-1` through `--heat-4`). Positive totals interpolate continuously in sRGB relative to the month's peak, with stops at 0%, 40%, 70% and 100%. Every logged cell uses **heat text**; empty days use **heat empty** and muted text. Numeric totals and accessible names remain authoritative.
 
@@ -176,12 +221,14 @@ The default palette pairs pale botanical grounds with dark green text; lavender 
 
 - **Sage** (`--ink`) is the page ground, not an occasional accent wash.
 - **Paper** (`--slab`) supports calendar, fields, Settings and logging surfaces.
-- **Sage well** (`--slab-2`) supports secondary fills, requests and comparison tracks; **sage rule** (`--rule`) separates controls and rows.
+- **Sage well** (`--slab-2`) supports secondary fills, requests and comparison tracks; **sage rule** (`--rule`) separates decorative rows. The stronger **control rule** (`--control-rule`) defines interactive field and outline-button boundaries.
 - **Forest text** (`--bone`) is primary text; **muted leaf** (`--ash`) is secondary text. Selection uses its own pale green token with forest text.
 
-Classic uses the same CSS property roles with its own dark values. Its logged-day ramp remains cold steel → muted olive → amber → oxide orange, with one dark foreground. A theme change must recolor existing calendar cells through variables without changing the data.
+Classic uses the same CSS property roles with its own light and dark values. Its logged-day ramp remains cold steel → muted olive → amber → oxide orange, with one dark foreground. A theme change must recolor existing calendar cells through variables without changing the data.
 
 **The Numeric Truth Rule.** Color and bar length supplement explicit numbers; neither is the sole carrier of activity or rank.
+
+**The Contrast Roles Rule.** Check all four theme/mode combinations. Use the dedicated `--on-signal` and `--on-signal-pressed` foregrounds on action fills, `--control-rule` for control boundaries, and `--placeholder` / `--tail-rule` for Classic placeholder and outlined-footer text. Normal text must reach 4.5:1 and necessary control boundaries 3:1 against their actual adjacent surfaces; decorative separators use the quieter rule tokens.
 
 ## Typography
 
@@ -211,7 +258,7 @@ Settings shares the phone breakpoint in both themes: below 48rem it fills the vi
 
 ## Elevation & Depth
 
-Most hierarchy comes from tonal panels, spacing and thin rules. The calendar and selected day are flat; shadows identify controls that float above content. The dock uses `--shadow-lift` (0 -12px 36px -20px rgb(32 61 46 / .22)); the mobile action uses a downward shadow (0 8px 24px -8px rgb(32 61 46 / .35)). Settings uses a native dialog and a dark translucent backdrop (rgb(7 24 17 / .6)). Classic retains its original darker dock shadow.
+Most hierarchy comes from tonal panels, spacing and thin rules. The calendar and selected day are flat; shadows identify controls that float above content. The dock uses `--shadow-lift` (0 -12px 36px -20px rgb(32 61 46 / .22)); the mobile action uses a downward shadow (0 8px 24px -8px rgb(32 61 46 / .35)). Settings uses a native dialog and a dark translucent backdrop (rgb(7 24 17 / .6)). Classic dark retains its original darker dock shadow. Mode overrides supply a black dock shadow in ROOTED dark and a softer dark-green shadow in Classic light. Logging and destructive sheets share the mode-aware dock shadow and `--sheet-backdrop`.
 
 Shared motion keeps the existing mechanical scoreboard grammar: changed numbers land over 420ms; calendar and month navigation communicate direction over 340ms; tab rails travel over 340ms; sheets slide over 340ms. Plant changes the logged-day pulse to a small leaf-settle scale from .94 to 1. Motion uses `cubic-bezier(.16, 1, .3, 1)`, is cancellable and does not queue behind input. Unchanged refreshes do not animate. Reduced-motion preferences disable or cancel animation while data and focus update immediately.
 
@@ -225,9 +272,9 @@ Classic retains square controls and panels, with its original circular mobile ac
 
 ### Actions, fields and navigation
 
-Primary actions use forest and paper text, darkening on hover or press. Outline actions use a rule border that turns forest on hover. Ghost actions use muted text and forest on hover; icon buttons add a sage-well hover fill. Visible keyboard focus is a 2px signal outline with a 2px offset. Text inputs use paper, a rule border, 52px minimum height and a signal focus border. Disabled buttons retain their shared reduced opacity and unavailable cursor.
+Primary actions use signal fill and its dedicated foreground tokens; ROOTED light darkens on hover or press, while ROOTED dark brightens. Outline actions use the stronger control-rule border that turns signal on hover. Ghost actions use muted text and forest on hover; icon buttons add a sage-well hover fill. Visible keyboard focus is a 2px signal outline with a 2px offset. Text inputs use the active slab, a control-rule border, 52px minimum height and a signal focus border. Disabled buttons retain their shared reduced opacity and unavailable cursor.
 
-The `LOG` / `BOARD`, account and leaderboard period tabs retain their ARIA tab behavior and roving focus. A moving signal underline identifies selection. An incoming request adds a numeric circular badge to `BOARD`. The log control remains available on the board surface. **Everyone** / **My crew** are grouped scope buttons with explicit pressed states; selection uses the active theme's signal fill.
+The `LOG` / `BOARD`, account and leaderboard period tabs retain their ARIA tab behavior and roving focus. A moving signal underline identifies selection. Tab labels are centered within equally padded controls, including `LOG`. Buttons, links, disclosure summaries and options suppress the browser’s blue tap highlight while retaining themed hover, pressed and keyboard-focus feedback. An incoming request adds a numeric circular badge to `BOARD`. The log control remains available on the board surface. **Everyone** / **My crew** are grouped scope buttons with explicit pressed states; selection uses the active theme's signal fill.
 
 ### Calendar, statistics and selected day
 
@@ -243,11 +290,19 @@ The selected-day goal sits between thin rules with explicit total/target text, t
 
 ### Logging and variation picker
 
-Mobile logging uses the original modal bottom sheet: opening focuses the numeric field, makes the background inert and shows a scrim. Commit, Close or Escape closes it and returns focus to the floating action. A stray scrim tap does not discard the workflow. Desktop keeps logging docked and visible.
+Mobile logging uses the shared sheet behavior in `web/sheet.js`: opening focuses the numeric field, makes the background inert, locks background scrolling and shows a scrim. Commit, Close or Escape closes it and returns focus to the floating action. A stray scrim tap does not discard the workflow. Desktop keeps logging docked and visible.
 
 The variation trigger is an ARIA combobox with a listbox popup, full-screen on mobile and anchored on desktop. Focus stays on the trigger while the active descendant moves; selection uses signal fill and a check. The per-account last-used variation preference is separate from the browser-wide theme preference.
 
 Quick keys `+5 / +10 / +20 / C` preserve number-field focus and selection so repeated tapping does not dismiss the keyboard. The explicitly driven press state and 12ms Vibration API tick remain shared; unsupported vibration is a no-op.
+
+### Destructive confirmations
+
+Every destructive action requires an explicit approval through the shared confirmation surface: deleting a set or variation, discarding a saved pending set, removing a crew member, declining a friend request, and removing a recovery email or passkey. The message names the affected item and consequence; the commit label names the action. Cancel receives initial focus. Escape or a backdrop tap cancels, and closing restores focus. Changing accounts cancels pending approval.
+
+The confirmation is a centered native dialog on desktop, up to 28rem wide with 1.5rem padding. Below 48rem it becomes a full-width bottom sheet with safe-area and keyboard clearance; the warning action sits above Cancel. Both controls are at least 52px high. ROOTED uses 16px desktop corners and rounded top corners on phones; Classic stays square. Warning fill and slab text identify the destructive action, with an underline on hover. Native modality provides focus containment when a confirmation opens above Settings.
+
+Logging and confirmation share the bottom-sheet surface and scroll/focus lifecycle. Their dismissal rules stay task-specific: confirmation permits backdrop cancellation; logging ignores backdrop taps to preserve the draft. Settings retains its separate full-screen phone presentation.
 
 ### Board, crew and requests
 
@@ -263,15 +318,23 @@ The request banner stays in sticky chrome and is capped at 42svh with internal s
 
 ### Settings and theme persistence
 
-Settings is available on both sign-in and app headers. Its native modal dialog provides focus containment, Escape dismissal and focus return. The **Classic theme** switch selects `classic` when on and `plant` when off; plant is the default for missing or unknown preferences.
+Settings is available on both sign-in and app headers. Its native modal dialog provides focus containment, Escape dismissal and focus return. The **Classic theme** switch selects `classic` when on and `plant` when off; plant is the default for missing or unknown preferences. The separate **Color mode** select offers **System**, **Light** and **Dark**. System is the default and follows live `prefers-color-scheme` changes; its adjacent note names the currently resolved mode. An explicit choice remains fixed across OS changes.
 
-Signed-in Settings places **Daily goal** between appearance and account recovery. Its numeric field keeps the shared 1rem input text and requests a numeric phone keyboard. The preview names the start date and explains same-day replacement before the save action; earlier targets appear in a collapsible history. Goal controls and status messages inherit the existing field, action and alert treatments in both themes.
+Settings groups controls into **Appearance**, **Training**, **Account & security**, and **About**, in that order. Appearance contains the theme switch and color mode; Training contains Daily goal; Account & security contains Recovery email and Passkeys; About contains What’s new. Training and Account & security are hidden before sign-in. Main groups use the active theme’s display headings with 1.25rem below, 1.5rem vertical padding and one thin rule between groups. Subsection headings use the text face at 1rem and weight 600. The sticky Settings title is 1.5rem. There is no introductory slogan, and neither the theme row nor What’s new adds enclosing rules.
 
-`web/theme.js` runs before styles and reads `pushup-counter:theme` from localStorage. It updates the root theme, browser color scheme, theme-color metadata and favicon; storage events synchronize tabs, including a return to plant when storage is cleared. Switching requires no reload and preserves drafts and app state. When saving is denied, the theme still changes for the visit and Settings states: “Theme changed for this visit. Enable browser storage to remember it.” Theme remains a browser-local preference; recovery email, permanent reminder dismissal and passkey registrations are persisted through the account APIs.
+The daily goal’s numeric field keeps the shared 1rem input text and requests a numeric phone keyboard. The preview names the start date and explains same-day replacement before the save action; earlier targets appear in a collapsible history. Goal controls and status messages inherit the existing field, action and alert treatments in both themes.
+
+`web/theme.js` runs before styles and reads `pushup-counter:theme` and `pushup-counter:mode` from localStorage. It updates the root theme and resolved mode, browser color scheme, theme-color metadata and theme favicon; storage events synchronize tabs, including a return to Plant/System when storage is cleared. Switching requires no reload and preserves drafts and app state. When saving is denied, the appearance still changes for the visit and Settings states: “Appearance changed for this visit. Enable browser storage to remember it.” Theme and mode remain browser-local preferences; recovery email, permanent reminder dismissal and passkey registrations are persisted through the account APIs.
+
+### What’s new
+
+Settings ends with a **What’s new** disclosure under **About**, with dated release entries, concise change lists and a textual **New** indicator. It has no surrounding borders; the single divider above About separates it from account controls. A small signal-colored dot on the Settings control and its accessible label also identify unread notes. Opening the disclosure marks the newest release read on this browser; that state synchronizes across tabs. With storage unavailable, reading still works for the visit.
+
+Release notes are bundled from `web/changelog.html` into the running app and remain readable offline. Keep newest entries first, use a unique stable release identifier, and retain prior entries for people who skip updates. Updates do not interrupt logging with an automatic dialog. Notes inherit text, rules, focus and spacing from the active theme/mode.
 
 ### Account, recovery and connection states
 
-Signed-in Settings adds **Recovery email** and **Passkeys** below the daily goal. Account sections use a thin rule, 2rem top margin and 1.5rem top padding within the responsive Settings surface. Forms retain the shared field stack and 52px inputs. Action rows wrap with .5rem gaps and 48px minimum button height. Named passkeys use plain divided rows with a removal action; long names and addresses wrap. Account controls inherit the active theme's typography, colors and shapes.
+Signed-in Settings groups **Recovery email** and **Passkeys** under **Account & security**, below Training. The account subsections use 2rem between them without extra rules. Forms retain the shared field stack and 52px inputs. Action rows wrap with .5rem gaps and 48px minimum button height. Named passkeys use plain divided rows with a removal action; long names and addresses wrap. Account controls inherit the active theme's typography, colors and shapes.
 
 Email remains optional. The account suggestion uses sage-well fill, a thin rule, direct text and `ADD EMAIL` / dismissal actions. A saved dismissal persists for the account. Settings distinguishes verified and pending addresses and exposes confirmation resend and removal when applicable. Email changes and passkey registration/removal require the current password; destructive removal uses explicit confirmation. Passkey availability, request progress, cancellation and failures use text status or alert messages beside the relevant form. Do not replace the password path with the passkey alternative.
 
@@ -281,9 +344,9 @@ Offline and pending-sync feedback appears above app content in a labelled region
 
 ### Identity and browser surfaces
 
-The plant header uses the authored inline leaf SVG with rounded caps and joins. Shared icons remain authored SVG; Classic keeps square caps. The installed app retains the existing tally mark, recolored in forest and sage. The manifest and Apple touch icon remain plant-themed even when Classic is selected; the in-app favicon and theme-color metadata follow the current theme. Native installed iOS status-bar appearance has not been verified.
+The plant header uses the authored inline leaf SVG with rounded caps and joins. Shared icons remain authored SVG; Classic keeps square caps. The installed app retains the existing tally mark, recolored in forest and sage. The manifest and Apple touch icon remain plant-themed even when Classic is selected; the in-app favicon follows the current theme and theme-color metadata follows its resolved mode. Native installed iOS status-bar appearance has not been verified.
 
-Selection, caret, accent color, scrollbars and link underline offset remain themed. The theme choice is not an accessibility mode: both appearances must retain focus, numeric alternatives, pinch zoom and reduced-motion behavior.
+Selection, caret, accent color, scrollbars and link underline offset remain themed. The theme choice is not an accessibility mode: all four appearances must retain focus, numeric alternatives, pinch zoom and reduced-motion behavior.
 
 ## Do's and Don'ts
 
@@ -293,12 +356,15 @@ Selection, caret, accent color, scrollbars and link underline offset remain them
 - **Do** scope botanical color, type, shape and layout changes to the plant theme.
 - **Do** keep logged totals and accessible names alongside calendar color and leaderboard bars.
 - **Do** preserve drafts, focus and the existing logging workflow when switching themes.
-- **Do** ship fonts and icons locally with the embedded app shell.
+- **Do** ship fonts, icons and release notes locally with the embedded app shell.
+- **Do** verify text and control contrast in all four theme/mode combinations.
+- **Do** require explicit confirmation before destructive actions, using desktop dialogs and mobile bottom sheets.
 
 ### Don't:
 
-- **Don't** replace the retained Classic stylesheet with a partial dark approximation.
+- **Don't** change a theme’s typography, geometry or layout when switching its color mode.
 - **Don't** turn the plant identity into dietary advice, training promises or invented evidence.
 - **Don't** round every shared component globally or replace the task layout with uniform cards.
-- **Don't** make theme selection an account or server setting without a separate product decision.
+- **Don't** make theme or mode selection an account or server setting without a separate product decision.
+- **Don't** restore browser-blue tap flashes or remove visible keyboard focus.
 - **Don't** animate unchanged data or delay data and focus updates behind motion.

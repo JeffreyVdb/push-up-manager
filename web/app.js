@@ -20,6 +20,13 @@ const state = {
   period: "daily",
 };
 
+// A confirmation can stay open through a background refresh or account change.
+// Approval belongs only to the session that opened it.
+async function confirmAction(options) {
+  const session = state.csrf;
+  return await window.PushupConfirm.ask(options) && Boolean(session) && session === state.csrf;
+}
+
 /* ---------------------------------------------------------- api */
 
 let offlineUnavailable = "";
@@ -652,7 +659,11 @@ async function createType(event) {
 }
 
 async function deleteType(t) {
-  const ok = confirm(`Delete "${t.name}" and every rep logged against it? This cannot be undone.`);
+  const ok = await confirmAction({
+    title: "Delete variation?",
+    message: `Delete “${t.name}” and every set logged under it, across all days? This cannot be undone.`,
+    action: "Delete variation",
+  });
   if (!ok) return;
   try {
     await api("DELETE", `/api/types/${t.id}`);
@@ -710,68 +721,34 @@ function trackKeyboardInset() {
 // permanently docked and none of this applies.
 const docked = () => window.matchMedia("(min-width: 48rem)").matches;
 
+let logSheet;
+function setupLogSheet() {
+  logSheet = window.PushupSheet.create($("log"), {
+    scrim: $("scrim"),
+    background: [$("app").querySelector(".sheet"), document.querySelector(".chrome")],
+  });
+  $("log").addEventListener("close", () => {
+    closePicker();
+    $("fab").classList.remove("is-hidden");
+    $("fab").setAttribute("aria-expanded", "false");
+    showError($("log-error"), "");
+    $("reps").blur();
+  });
+}
+
 function openSheet() {
   if (docked()) return;
-  $("log").classList.add("is-open");
-  $("scrim").hidden = false;
-  // Force a frame so the scrim transitions in rather than snapping.
-  void $("scrim").offsetWidth;
-  $("scrim").classList.add("is-open");
+  logSheet.open({ focus: $("reps"), returnTo: $("fab") });
   $("fab").classList.add("is-hidden");
   $("fab").setAttribute("aria-expanded", "true");
-  // The rest of the page is inert while the sheet owns the screen.
-  $("app").querySelector(".sheet").inert = true;
-  document.querySelector(".chrome").inert = true;
-  document.body.style.overflow = "hidden";
-
-  const reps = $("reps");
-  reps.focus({ preventScroll: true });
-  reps.select();
+  $("reps").select();
 }
 
 function closeSheet({ restoreFocus = true } = {}) {
-  if (docked()) return;
-  closePicker();
-  $("log").classList.remove("is-open");
-  $("scrim").classList.remove("is-open");
-  $("fab").classList.remove("is-hidden");
-  $("fab").setAttribute("aria-expanded", "false");
-  $("app").querySelector(".sheet").inert = false;
-  document.querySelector(".chrome").inert = false;
-  document.body.style.overflow = "";
-  showError($("log-error"), "");
-  // Drop focus so the on-screen keyboard retracts with the sheet.
-  $("reps").blur();
-
-  // Keep the scrim in the tree until it has faded out.
-  setTimeout(() => {
-    if (!$("log").classList.contains("is-open")) $("scrim").hidden = true;
-  }, 340);
-
-  if (restoreFocus) $("fab").focus({ preventScroll: true });
+  logSheet.close({ restoreFocus });
 }
 
-function sheetIsOpen() {
-  return $("log").classList.contains("is-open");
-}
-
-// Keep focus inside the sheet while it is modal.
-function trapFocus(event) {
-  if (event.key !== "Tab" || !sheetIsOpen()) return;
-  const focusable = $("log").querySelectorAll(
-    'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
-  );
-  if (focusable.length === 0) return;
-  const first = focusable[0];
-  const last = focusable[focusable.length - 1];
-  if (event.shiftKey && document.activeElement === first) {
-    event.preventDefault();
-    last.focus();
-  } else if (!event.shiftKey && document.activeElement === last) {
-    event.preventDefault();
-    first.focus();
-  }
-}
+function sheetIsOpen() { return Boolean(logSheet?.isOpen); }
 
 /* ---------------------------------------------------------- logging */
 
@@ -857,7 +834,14 @@ function pulseDay(cell) {
   cell.classList.add("pulse");
 }
 
-async function deleteEntry(id) {
+async function deleteEntry(entry) {
+  if (!entry || entry.pending) return;
+  if (!await confirmAction({
+    title: "Delete set?",
+    message: `Delete this set of ${entry.count} ${entry.type_name} push-ups from ${fmtDay(entry.day)}? This cannot be undone.`,
+    action: "Delete set",
+  })) return;
+  const id = entry.id;
   try {
     await api("DELETE", `/api/reps/${id}`);
     await Promise.all([loadDay(state.selectedDay), loadCalendar(), loadStats(), loadTypes()]);
@@ -888,7 +872,7 @@ function buildEntry(id) {
   del.className = "btn btn-ghost btn-icon";
   del.title = "Delete this entry";
   del.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-trash"></use></svg>';
-  del.addEventListener("click", () => deleteEntry(id));
+  del.addEventListener("click", () => deleteEntry(li.entry));
 
   li.append(count, name, time, del);
   return li;
@@ -918,6 +902,7 @@ async function loadDay(day) {
 
   reconcile(list, res.entries.map((e) => {
     const li = kept.get(String(e.id)) || buildEntry(e.id);
+    li.entry = { ...e, day };
     const [count, name, time, del] = li.children;
     setText(count, String(e.count));
     // The name travels with the type, so a rename elsewhere lands here too.
@@ -1553,7 +1538,7 @@ function buildRequest(req) {
   no.type = "button";
   no.className = "btn btn-outline btn-sm";
   no.textContent = "DECLINE";
-  no.addEventListener("click", () => armDecline(li, req));
+  no.addEventListener("click", () => armDecline(req));
 
   acts.append(yes, no);
   li.append(text, acts);
@@ -1597,41 +1582,14 @@ function renderRequests() {
   reconcile(list, pending.map((req) => kept.get(String(req.id)) || buildRequest(req)));
 }
 
-// Declining locks the sender out for a week and cannot be taken back, so the
-// cost is stated and confirmed before it happens. Deleting a variation already
-// gets a confirmation; this is worse, because it lands on somebody else.
-function armDecline(li, req) {
-  li.classList.add("is-confirming");
-  const text = li.querySelector(".req-text");
-  const acts = li.querySelector(".req-acts");
-  text.replaceChildren();
-  const who = document.createElement("strong");
-  who.textContent = req.username;
-  text.append(
-    document.createTextNode("Turn "), who,
-    document.createTextNode(` away? They cannot ask again for ${DECLINE_BLOCK_DAYS} days.`)
-  );
-
-  acts.replaceChildren();
-  const confirm = document.createElement("button");
-  confirm.type = "button";
-  confirm.className = "btn btn-primary btn-sm";
-  confirm.textContent = "TURN AWAY";
-  confirm.addEventListener("click", () => answerRequest(req, "decline"));
-
-  const keep = document.createElement("button");
-  keep.type = "button";
-  keep.className = "btn btn-outline btn-sm";
-  keep.textContent = "KEEP";
-  // Only this row backs out, and the answer keeps the focus it was given.
-  keep.addEventListener("click", () => {
-    const fresh = buildRequest(req);
-    li.replaceWith(fresh);
-    fresh.querySelector(".req-acts").lastElementChild.focus({ preventScroll: true });
-  });
-
-  acts.append(confirm, keep);
-  confirm.focus({ preventScroll: true });
+// Declining blocks a new request for a week, so name the consequence first.
+async function armDecline(req) {
+  if (!await confirmAction({
+    title: "Decline request?",
+    message: `Turn ${req.username} away? They cannot ask again for ${DECLINE_BLOCK_DAYS} days.`,
+    action: "Decline request",
+  })) return;
+  await answerRequest(req, "decline");
 }
 
 async function answerRequest(req, action) {
@@ -1915,7 +1873,11 @@ async function sendFriendRequest(event) {
 }
 
 async function removeFriend(f) {
-  const ok = confirm(`Remove ${f.username} from your crew? They drop off your board.`);
+  const ok = await confirmAction({
+    title: "Remove crew member?",
+    message: `Remove ${f.username} from your crew? They will no longer appear on your crew board. Either of you can send a new request.`,
+    action: "Remove member",
+  });
   if (!ok) return;
   try {
     await api("DELETE", `/api/friends/${f.id}`);
@@ -2116,6 +2078,7 @@ async function enterApp() {
 }
 
 function wire() {
+  setupLogSheet();
   window.AppAccount?.wire();
   if (offlineChannel) offlineChannel.onmessage = async () => {
     if (!offline?.userID) return;
@@ -2147,12 +2110,17 @@ function wire() {
   $("goal-target").addEventListener("input", previewGoal);
   $("goal-form").addEventListener("submit", saveGoal);
   $("settings-close").addEventListener("click", () => settings.close());
-  themeToggle.addEventListener("change", () => {
-    const saved = window.PushupTheme.set(themeToggle.checked ? "classic" : "plant");
+  function appearanceStatus(saved) {
     const status = $("theme-status");
     status.hidden = saved;
-    status.textContent = saved ? "" : "Theme changed for this visit. Enable browser storage to remember it.";
+    status.textContent = saved ? "" : "Appearance changed for this visit. Enable browser storage to remember it.";
     requestAnimationFrame(syncTabRails);
+  }
+  themeToggle.addEventListener("change", () => {
+    appearanceStatus(window.PushupTheme.set(themeToggle.checked ? "classic" : "plant"));
+  });
+  $("color-mode").addEventListener("change", (event) => {
+    appearanceStatus(window.PushupTheme.setMode(event.target.value));
   });
   trackKeyboardInset();
   trackChromeHeight();
@@ -2235,6 +2203,7 @@ function wire() {
   });
 
   document.addEventListener("keydown", (event) => {
+    if ($("confirm-action").open) return; // Native dialog owns keyboard focus and Escape.
     if (event.key === "Escape") {
       // Innermost layer first: the picker, then the sheet.
       if (pickerIsOpen()) {
@@ -2248,20 +2217,12 @@ function wire() {
         return;
       }
     }
-    if (!pickerIsOpen()) trapFocus(event);
   });
   // Rotating into the docked layout must not leave a half-open sheet behind.
   window.matchMedia("(min-width: 48rem)").addEventListener("change", (e) => {
     if (!e.matches) return;
     closePicker();
-    $("log").classList.remove("is-open");
-    $("scrim").classList.remove("is-open");
-    $("scrim").hidden = true;
-    $("fab").classList.remove("is-hidden");
-    $("fab").setAttribute("aria-expanded", "false");
-    $("app").querySelector(".sheet").inert = false;
-    document.querySelector(".chrome").inert = false;
-    document.body.style.overflow = "";
+    logSheet.close({ restoreFocus: false });
   });
 
   const reps = $("reps");
@@ -2444,7 +2405,11 @@ async function renderSyncStatus() {
         discard.className = "btn btn-ghost";
         discard.textContent = "DISCARD SAVED SET";
         discard.addEventListener("click", async () => {
-          if (!confirm(`Discard ${entry.count} ${entry.type_name} from ${entry.day}? This saved set will be permanently removed from this device.`)) return;
+          if (!await confirmAction({
+            title: "Discard saved set?",
+            message: `Discard ${entry.count} ${entry.type_name} push-ups from ${entry.day}? This saved set will be permanently removed from this device.`,
+            action: "Discard set",
+          })) return;
           try { await offline.discard(entry.client_id); await refreshAll(); }
           catch (err) { toast(err.message); }
         });

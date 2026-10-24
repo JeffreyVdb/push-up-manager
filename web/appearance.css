@@ -1,0 +1,119 @@
+/* Mode changes color roles only; each theme keeps its typography and layout. */
+:root[data-mode="light"] { color-scheme: light; }
+:root[data-mode="dark"] { color-scheme: dark; }
+
+:root[data-theme="plant"][data-mode="dark"] {
+  --ink: #111b15;
+  --slab: #1b2920;
+  --slab-2: #28392b;
+  --rule: #475c48;
+  --control-rule: #789071;
+  --bone: #e4eddc;
+  --ash: #a8bda5;
+  --signal: #a8ce91;
+  --signal-deep: #bedfa8;
+  --signal-mid: #799b68;
+  --warn: #ffb49b;
+  --on-signal: #172711;
+  --on-signal-pressed: #172711;
+  --heat-0: #233026;
+  --heat-1: #8cae79;
+  --heat-2: #9cbf80;
+  --heat-3: #b6cf90;
+  --heat-4: #c7dfa2;
+  --heat-ink: #172711;
+  --petal: #29232f;
+  --plum: #d5c2df;
+  --day-rule: #534759;
+  --day-muted: #c0b0c9;
+  --selection: #42583a;
+  --shadow-lift: 0 -12px 36px -20px rgb(0 0 0 / .7);
+}
+
+:root[data-theme="classic"][data-mode="light"] {
+  --ink: #f3f1ea;
+  --slab: #fffef9;
+  --slab-2: #e7e5dd;
+  --rule: #c5c7bd;
+  --control-rule: #777e71;
+  --bone: #20251f;
+  --ash: #5a635a;
+  --signal: #b8320b;
+  --signal-deep: #922707;
+  --signal-hover: #a42c08;
+  --signal-mid: #ce5936;
+  --warn: #8c410b;
+  --on-signal: #fffef9;
+  --on-signal-pressed: #fffef9;
+  --placeholder: #5a635a;
+  --tail-rule: #5a635a;
+  --heat-0: #e8e9e1;
+  --shadow-lift: 0 -18px 40px -24px rgb(32 37 31 / .3);
+}
+
+.mode-setting { margin-top: 1.5rem; }
+#color-mode {
+  width: 100%;
+  min-height: 52px;
+  padding: .75rem;
+  border: 1px solid var(--control-rule);
+  background: var(--slab);
+  color: var(--bone);
+  font: inherit;
+  font-size: 1rem;
+}
+:where([data-theme="plant"]) #color-mode { border-radius: 8px; }
+.release-notes summary { padding-block: .875rem; min-height: 48px; cursor: pointer; font-weight: 600; }
+.release-notes > .hint { margin: .5rem 0 1.5rem; }
+.release-entry { margin-bottom: 1.5rem; }
+.release-entry + .release-entry { padding-top: 1.5rem; border-top: 1px solid var(--rule); }
+.release-entry h4 { font: 600 1.125rem/1.4 var(--text); margin: 0 0 .25rem; }
+.release-entry time { color: var(--ash); font-size: .875rem; }
+.release-entry ul { padding-left: 1.25rem; margin: .75rem 0 0; }
+.release-entry li + li { margin-top: .5rem; }
+.release-unread { margin-left: .5rem; color: var(--signal); font-size: .8125rem; }
+[data-open-settings] { position: relative; }
+[data-open-settings][data-unread]::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--signal);
+}
+
+/* Destructive confirmations share the active palette and remain distinct from
+   the full-screen Settings surface on phones. */
+.confirm-dialog {
+  width: min(28rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: 1.5rem;
+  margin: auto;
+  border: 1px solid var(--rule);
+  color: var(--bone);
+  font: inherit;
+  overscroll-behavior: contain;
+}
+.confirm-dialog .band-title { padding: 0; margin: 0 0 .75rem; }
+.confirm-dialog p { margin: 0; overflow-wrap: anywhere; }
+.confirm-actions { display: flex; justify-content: flex-end; gap: .75rem; margin-top: 1.5rem; }
+.confirm-actions .btn { min-height: 52px; }
+.btn-danger { background: var(--warn); color: var(--slab); }
+.btn-danger:hover { text-decoration: underline; text-underline-offset: 3px; }
+:where([data-theme="plant"]) .confirm-dialog { border-radius: 16px; }
+@media (max-width: 47.999rem) {
+  .confirm-dialog {
+    width: 100%;
+    max-width: 100%;
+    top: auto;
+    max-height: calc(100dvh - var(--kb-inset, 0px) - env(safe-area-inset-top, 0px) - 1rem);
+    margin: 0;
+    padding: 1.5rem max(1rem, env(safe-area-inset-right, 0px)) var(--sheet-safe-bottom) max(1rem, env(safe-area-inset-left, 0px));
+    border: 0;
+    border-top: 3px solid var(--signal);
+  }
+  :where([data-theme="plant"]) .confirm-dialog { border-radius: 16px 16px 0 0; border-top: 1px solid var(--rule); }
+  .confirm-actions { flex-direction: column-reverse; }
+}

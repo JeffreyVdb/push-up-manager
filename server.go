@@ -90,6 +90,15 @@ func (s *server) rewriteBuildPlaceholders() {
 		if err != nil {
 			continue
 		}
+		if name == "index.html" {
+			// Trusted release notes ship in the shell, including offline. An old
+			// open tab must never display notes fetched from a newer server.
+			notes, err := fs.ReadFile(s.assets, "changelog.html")
+			if err != nil {
+				panic(err)
+			}
+			raw = []byte(strings.ReplaceAll(string(raw), "__CHANGELOG__", string(notes)))
+		}
 		if !strings.Contains(string(raw), "__BUILD__") {
 			continue
 		}
