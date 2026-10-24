@@ -29,6 +29,9 @@ pushup-counter: ELF 64-bit LSB executable, x86-64, statically linked, stripped
   their previous target; days before the first goal stay unmarked. Completed
   calendar days show a check, and reaching a goal reveals a calm daily reflection.
 - Today / 7-day / month / all-time totals, best day, and current activity streak.
+- **Global top 10 leaderboards.** Compare all app users by best day, month or
+  year, this month, this year, most variations in a day, and average daily reps.
+  Open **Board → Everyone** and choose a category.
 - **Friends and a shared leaderboard.** Add someone by username; they accept or
   decline from a banner pinned under the top bar. The board ranks you and your
   friends for today, this week (Monday–Sunday), this month, and all time, as
@@ -241,8 +244,33 @@ The rules that follow from that:
 - Only the **recipient** answers a request. Handlers match on `to_user`, so the
   sender accepting their own request is a 404.
 
-The leaderboard sums the signed-in user plus their accepted friends over four
-windows in one query. Nobody outside that circle is ever counted.
+The **My crew** leaderboard sums the signed-in user plus their accepted friends
+over four windows in one query. **Everyone** ranks all users independently of
+friendship.
+
+## Global leaderboard
+
+`GET /api/leaderboard?metric=best_day` requires sign-in and returns up to ten
+users with positive scores. Supported metrics: `best_day`, `best_month`,
+`best_year`, `this_month`, `this_year`, `variations_day`, `average_day`.
+
+Best records use calendar periods across all saved history, including the current
+partial period. Each person appears once, with their earliest record date when
+they matched that record more than once. Variations count distinct logged
+variation IDs per day, regardless of set count. Average daily reps divides all
+reps by calendar days from the first logged day through today, including rest
+days; it is displayed to one decimal place and ranked before rounding.
+
+Dates follow the server’s calendar. Future entries never count. Equal scores
+share competition ranks (1, 1, 3); usernames break ties for ordering and the
+ten-user cutoff. Users without reps in a category are omitted. Deleting entries
+or variations recalculates records from the remaining data.
+
+Rankings load on opening the board, changing category, and the app’s regular
+refresh (at least once a minute while visible). Unsynced sets count after syncing.
+A failed refresh labels visible rankings as potentially stale; changing category
+or reloading offline asks for a connection and offers Retry. Global rankings are
+not stored in the offline account snapshot.
 
 ## PWA and HTTPS
 
@@ -271,8 +299,9 @@ HTTPS (Tailscale, a reverse proxy with a certificate, …) and set
   mutating request.
 - All queries are scoped by `user_id`; one account cannot read, modify, or
   delete another's data. The one exception is deliberate and narrow: the
-  leaderboard reads the totals of accounts you are *mutually* friends with, and
-  nothing else about them.
+  crew board reads friends’ totals, and the authenticated global board exposes
+  usernames, ranks, aggregate scores and record dates for its top ten. Individual
+  entries, account settings, email addresses and passkeys remain private.
 - Only a request's recipient can accept or decline it; the sender matching on
   `to_user` is what enforces that, so a crafted id gets a 404, not a friendship.
 
@@ -291,6 +320,12 @@ routes. Run a disposable test server on `http://localhost:5573`, then run
 `node tests/browser-flows.cjs` with Playwright available. It creates test accounts
 and sets. Optional environment variables: `PUSHUP_TEST_URL`, `PLAYWRIGHT_MODULE`,
 `CHROMIUM_PATH`, and `PUSHUP_SCREENSHOTS` (capture directory).
+
+`tests/browser-leaderboard.cjs` checks all seven global rankings, the ten-person
+limit, friend-board isolation, self markers, racing selections, connection recovery
+and both themes at desktop, phone and 320px widths (default port `5578`). It uses
+the same Playwright and screenshot environment variables and needs an empty
+disposable database.
 
 `tests/browser-goals.cjs` runs against a disposable server (default port `5575`)
 and checks date-aware completion, goal previews and replacement, offline

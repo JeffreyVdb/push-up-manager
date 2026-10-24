@@ -116,6 +116,7 @@ func (s *server) handler() http.Handler {
 	mux.HandleFunc("DELETE /api/reps/{id}", s.auth(s.csrf(s.handleDeleteRep)))
 
 	mux.HandleFunc("GET /api/friends", s.auth(s.handleFriends))
+	mux.HandleFunc("GET /api/leaderboard", s.auth(s.handleLeaderboard))
 	mux.HandleFunc("POST /api/friends/requests", s.auth(s.csrf(s.handleSendFriendRequest)))
 	mux.HandleFunc("POST /api/friends/requests/{id}/accept", s.auth(s.csrf(s.handleAcceptFriendRequest)))
 	mux.HandleFunc("POST /api/friends/requests/{id}/decline", s.auth(s.csrf(s.handleDeclineFriendRequest)))

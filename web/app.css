@@ -1167,3 +1167,27 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
 .goal-history li + li { margin-top: .75rem; }
 #goal-history-details { margin-top: 1rem; }
 #goal-history-details summary { cursor: pointer; padding: .75rem 0; }
+
+/* All-user records extend the existing board in both themes. */
+.board-scopes { display: flex; gap: .5rem; flex-wrap: wrap; }
+.board-scopes [aria-pressed="true"] { background: var(--signal); color: var(--ink); border-color: var(--signal); }
+#leaderboard-metric {
+  width: 100%; min-width: 0; min-height: 52px; padding: .75rem .5rem;
+  border: 1px solid var(--rule); background: var(--slab); color: var(--bone);
+  font: inherit; font-size: 1rem; cursor: pointer;
+}
+.leaderboard-note { color: var(--ash); font-size: .875rem; line-height: 1.5; margin: .75rem 0 1.25rem; max-width: 65ch; }
+.leaderboard-rules { margin: 1.25rem 0 0; font-size: .75rem; }
+.global-record { grid-column: 2 / -1; font-size: .75rem; color: var(--ash); }
+#global-board .lb { grid-template-columns: 1.5rem minmax(0, 1fr) auto; }
+#global-board .lb-name { flex-wrap: wrap; overflow-wrap: anywhere; }
+#global-board .lb-who { white-space: normal; overflow: visible; }
+#global-board .lb-num { white-space: nowrap; }
+#global-board .lb-unit { font: 400 .75rem var(--text); color: var(--ash); display: block; margin-top: .3rem; text-align: right; }
+:where([data-theme="plant"]) .board-scopes [aria-pressed="true"] { color: var(--slab); }
+:where([data-theme="plant"]) #leaderboard-metric { border-radius: 8px; }
+@media (max-width: 359px) {
+  :where([data-theme="classic"]) .topbar { padding-inline: max(.5rem, var(--safe-l)) max(.5rem, var(--safe-r)); }
+  :where([data-theme="classic"]) .topbar-right { gap: 0; }
+  :where([data-theme="classic"]) .vtab { padding-inline: .25rem; }
+}

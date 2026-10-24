@@ -334,7 +334,8 @@
 @media (max-width: 359px) {
   :where([data-theme="plant"]) .topbar { gap: .25rem; padding-inline: .5rem; }
   :where([data-theme="plant"]) .brand-lockup { gap: .25rem; }
-  :where([data-theme="plant"]) .brand-lockup .ico { width: 1.125rem; height: 1.125rem; }
+  :where([data-theme="plant"]) .brand-lockup .ico { display: none; }
+  :where([data-theme="plant"]) .vtab { padding-inline: .25rem; }
   :where([data-theme="plant"]) .wordmark-sm { font-size: 1.125rem; }
   :where([data-theme="plant"]) .monthnav { margin-left: auto; }
   :where([data-theme="plant"]) .stat + .stat { padding-left: .625rem; }

@@ -37,7 +37,7 @@ Not a general fitness tracker. One movement, tracked honestly, with an interface
 - Username + password accounts, optional confirmed recovery email and password reset links. Suggest adding an email to accounts without one; dismissing the suggestion is permanent for the account. Settings manages email confirmation and named passkeys, and passkeys support passwordless sign-in. *(Explicit user direction, 2026-10-23; supersedes the original no-email constraint.)*
 - Multiple user-defined push-up types; each user gets a starter set (Standard, Wide, Diamond, Incline) they can rename or delete.
 - Friends, added by username. A request must be accepted by its recipient; declining it locks the sender out of asking that person again for seven days. Removing a friend clears the history both ways, so either side can ask again immediately. *(Explicit user constraint.)*
-- One shared leaderboard over the signed-in user plus their accepted friends, for today, the current Monday–Sunday week, the current month, and all time. It never counts anybody outside that circle.
+- Board offers **Everyone**, a top ten across all app users for best day/month/year, this month/year, most distinct variations in a day, and average daily reps. Average includes rest days from the first logged day through today. Positive scores only; tied scores share ranks, usernames settle the ten-person cutoff. Records include their period and use server calendar dates. Global rankings require a connection; unsynced reps count after syncing. **My crew** retains the friend-only board for today, the current Monday–Sunday week, the current month and all time. *(Explicit user direction, 2026-10-24.)*
 - Reps are logged as entries against (type, day). The day always defaults to today; past days can be chosen. Future days are rejected.
 - Month calendar view showing per-day totals at a glance. Daily goals are dated: a saved target starts on the server's current day and applies until replaced; earlier dates retain their target and days before the first goal cannot be marked complete. Saving twice on a date replaces that date's target. Settings explains these consequences before saving. Goal history is account-scoped and cached offline; changes require a connection. *(Explicit user direction, 2026-10-24.)*
 - Calendar checkmarks and explicit progress distinguish achieved goals from activity heat. Reaching a goal reveals a reflective quote with reduced-motion-aware animation. Quotes lean toward breath, kindness, presence and caring for the body as a way to care for the mind. Two API adapters fall back to 15 original bundled reflections; selection stays stable per date on a device and avoids adjacent-day repeats when history is available. This calmer completion voice is an explicit exception to the retained logging language. *(Explicit user direction, 2026-10-24.)*
@@ -57,14 +57,14 @@ The original dark **FLOOR** appearance remains available through the **Classic t
 
 ## Evidence on Hand
 
-None. There are no testimonials, user counts, benchmarks, or third-party claims, and none may be invented. Every number shown comes from reps somebody actually logged — the user's own, or an accepted friend's.
+None. There are no testimonials, user counts, benchmarks, or third-party claims, and none may be invented. Every number shown comes from reps somebody actually logged — the user's own, an accepted friend's, or an app user's aggregate leaderboard record.
 
 ## Product Principles
 
 1. **Logging beats browsing.** The path from opening the app to a recorded set is the product; everything else is secondary.
 2. **Defaults do the work.** Today, and the last-used variation, are already selected. Typing a number is the only required act.
 3. **Show the truth, including the gaps.** Empty days are visible, not hidden or softened.
-4. **One movement, done seriously.** No feature sprawl into other exercises or training plans. Social exists only as comparison against people you chose: a roster and a leaderboard, no feed, no likes, no comments. *(Amended 2026-08-24 at the user's explicit request; the original principle ruled out social features outright.)*
+4. **One movement, done seriously.** No feature sprawl into other exercises or training plans. Social supports friend comparison and app-wide top-ten records: a roster and leaderboards, no feed, no likes, no comments. *(Amended 2026-08-24 at the user's explicit request; the original principle ruled out social features outright.)*
 5. **Thumb-first.** Every primary control is reachable and large enough to hit while out of breath.
 
 ## Accessibility & Inclusion

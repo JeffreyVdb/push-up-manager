@@ -205,7 +205,7 @@ At 48–64rem, columns narrow to 1.35:1, gaps and outer padding reduce to 1.5rem
 
 Below 48rem, the plant view stacks introduction, statistics, calendar, selected day and variations with 1.75rem gaps. The header drops to 72px, the username and wordmark suffix hide, and side padding is 1rem with safe-area protection. The paper calendar extends .5rem into each gutter to protect seven-column legibility. Crew also stacks. The floating `LOG A SET` action opens the existing modal logging sheet. Bottom clearance and safe-area insets protect the action and content.
 
-At widths below 359px the header tightens further. Calendar controls remain numeric and readable at 320px; narrow seven-column cells are the documented exception to the general 48px touch-target goal. Do not introduce horizontal page scrolling to force wider cells.
+At widths of 359px and below, the header tightens further: the plant leaf hides, both themes reduce tab padding, and Classic reduces outer padding and control gaps. Header controls retain at least 48px touch targets. Calendar controls remain numeric and readable at 320px; narrow seven-column cells are the documented exception to the general 48px touch-target goal. Do not introduce horizontal page scrolling to force wider cells.
 
 Settings shares the phone breakpoint in both themes: below 48rem it fills the viewport (100dvh), with square corners, 1rem side padding and safe-area padding above and below. Its opaque, ruled header keeps the close control visible while forms scroll. Desktop retains the 28rem dialog, 1.5rem padding and viewport height limit; the header remains sticky there too.
 
@@ -227,7 +227,7 @@ Classic retains square controls and panels, with its original circular mobile ac
 
 Primary actions use forest and paper text, darkening on hover or press. Outline actions use a rule border that turns forest on hover. Ghost actions use muted text and forest on hover; icon buttons add a sage-well hover fill. Visible keyboard focus is a 2px signal outline with a 2px offset. Text inputs use paper, a rule border, 52px minimum height and a signal focus border. Disabled buttons retain their shared reduced opacity and unavailable cursor.
 
-The `LOG` / `CREW`, account and leaderboard period tabs retain their ARIA tab behavior and roving focus. A moving signal underline identifies selection. An incoming request adds a numeric circular badge to `CREW`. The log control remains available on the crew surface.
+The `LOG` / `BOARD`, account and leaderboard period tabs retain their ARIA tab behavior and roving focus. A moving signal underline identifies selection. An incoming request adds a numeric circular badge to `BOARD`. The log control remains available on the board surface. **Everyone** / **My crew** are grouped scope buttons with explicit pressed states; selection uses the active theme's signal fill.
 
 ### Calendar, statistics and selected day
 
@@ -249,9 +249,15 @@ The variation trigger is an ARIA combobox with a listbox popup, full-screen on m
 
 Quick keys `+5 / +10 / +20 / C` preserve number-field focus and selection so repeated tapping does not dismiss the keyboard. The explicitly driven press state and 12ms Vibration API tick remain shared; unsupported vibration is a no-op.
 
-### Crew and requests
+### Board, crew and requests
 
-The board remains a bar comparison: rank, name, total, visible track and `TO PASS` distance. Forest identifies the leader and leaf-bar fills other shares, with a floor for nonzero totals. `YOU` remains outside the truncating name. Existing rows reconcile by user ID and travel to changed positions or totals; unchanged refreshes do not refill bars. The board remains hidden when there is only one person to rank.
+The board remains a bar comparison: rank, name, numeric score and visible track. Forest identifies first-ranked rows and leaf-bar fills other shares. `YOU` remains separate from the name. Existing rows reconcile by user ID and travel to changed positions or totals; unchanged refreshes do not refill bars.
+
+**Everyone** opens a single global top-ten list, with a full-width category selector above explanatory text. Its seven categories cover best day, month and year, this month and year, most distinct variations in a day, and average daily reps. The selector inherits field colors and a 52px minimum height, with the existing 8px control corners in ROOTED and square corners in Classic. Rows show their record date or period and explicit units (`reps`, `variations` or `reps / day`); names wrap, scores stay right-aligned, and accessible row names include rank, score, units and date. Equal scores share a rank, with usernames ordering ties. Average daily reps include rest days from the first logged day through today and rank before display rounding; the row names that starting date. Only positive scores appear, and even a single qualifying user remains visible.
+
+Loading and updating use a text status and a busy list. Refreshing the same category preserves its visible rows; a failed refresh marks those rankings as potentially out of date and offers **Retry leaderboard**. Changing category clears the previous list while loading. Connection failures without retained rows and empty results each have explicit text. The board uses the server's calendar and requires a connection; pending reps contribute after syncing.
+
+**My crew** retains the today, week, month and all-time period tabs, `TO PASS` distance and a minimum visible bar share for nonzero totals. Only this list hides when there is one person to rank, replacing it with the existing invitation to add someone.
 
 The request banner stays in sticky chrome and is capped at 42svh with internal scrolling. Plant uses sage-well fill without Classic's signal top rule. Accept/decline behavior, destructive confirmation, announcement and the `ASKED` list remain shared. Keep competitive empty states and clear consequences.
 

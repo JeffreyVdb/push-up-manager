@@ -1391,6 +1391,7 @@ function setView(view) {
   }
   $("view-log").hidden = view !== "log";
   $("view-crew").hidden = view !== "crew";
+  if (view === "crew") loadGlobalBoard();
   syncTabRails();
   if (view !== previous) move($("view-" + view), [
     { transform: "translateY(18px)", opacity: .25 },
@@ -1417,6 +1418,101 @@ function wireTablist(selector, activate) {
   }
 }
 
+/* ---------------------------------------------------------- all-user board */
+let globalBoardRequest = 0;
+let globalBoardData = null;
+let globalBoardLoading = false;
+
+function setBoardScope(scope) {
+  const everyone = scope === "everyone";
+  $("global-panel").hidden = !everyone;
+  $("crew-panel").hidden = everyone;
+  $("scope-everyone").setAttribute("aria-pressed", String(everyone));
+  $("scope-crew").setAttribute("aria-pressed", String(!everyone));
+  if (everyone) loadGlobalBoard();
+  else syncTabRails();
+}
+
+function globalBoardDescription(metric, today) {
+  const year = today.slice(0, 4);
+  const month = new Date(`${today}T12:00:00`).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  return {
+    best_day: "Each person’s highest daily total, across all variations.",
+    best_year: "Each person’s highest calendar-year total, including the current year.",
+    this_year: `Total push ups in ${year}, through today.`,
+    variations_day: "Each person’s most distinct variations logged on one day. Repeated sets count once.",
+    best_month: "Each person’s highest calendar-month total, including the current month.",
+    this_month: `Total push ups in ${month}, through today.`,
+    average_day: "Total reps divided by calendar days from the first logged day through today, including rest days. Ranked before rounding.",
+  }[metric];
+}
+
+async function loadGlobalBoard(force = false) {
+  if (!state.csrf || state.view !== "crew" || $("global-panel").hidden) return;
+  const metric = $("leaderboard-metric").value;
+  if (globalBoardLoading && !force) return;
+  const request = ++globalBoardRequest;
+  const account = state.csrf;
+  globalBoardLoading = true;
+  const sameMetric = globalBoardData?.metric === metric;
+  if (!sameMetric) { globalBoardData = null; $("global-board").replaceChildren(); }
+  $("leaderboard-description").textContent = globalBoardDescription(metric, state.today);
+  $("leaderboard-status").textContent = sameMetric ? "Updating rankings…" : "Loading rankings…";
+  $("leaderboard-retry").hidden = true;
+  $("global-board").setAttribute("aria-busy", "true");
+  try {
+    const data = await networkAPI("GET", `/api/leaderboard?metric=${encodeURIComponent(metric)}`);
+    if (request !== globalBoardRequest || account !== state.csrf) return;
+    globalBoardData = data;
+    $("leaderboard-description").textContent = globalBoardDescription(metric, data.today);
+    renderGlobalBoard(data);
+    $("leaderboard-status").textContent = data.rows.length ? `${data.rows.length} ranked ${data.rows.length === 1 ? "user" : "users"}.` : "No reps logged for this category yet. Log a set to start the board.";
+  } catch {
+    if (request !== globalBoardRequest || account !== state.csrf) return;
+    $("leaderboard-status").textContent = globalBoardData
+      ? "Rankings may be out of date. Reconnect and retry to update them."
+      : "Rankings need a connection. Reconnect and retry.";
+    $("leaderboard-retry").hidden = false;
+  } finally {
+    if (request === globalBoardRequest) {
+      globalBoardLoading = false;
+      $("global-board").setAttribute("aria-busy", "false");
+    }
+  }
+}
+
+function renderGlobalBoard(data) {
+  const average = data.metric === "average_day";
+  const unit = data.metric === "variations_day" ? "variations" : average ? "reps / day" : "reps";
+  const number = new Intl.NumberFormat(undefined, { maximumFractionDigits: average ? 1 : 0 });
+  const peak = data.rows[0]?.score || 1;
+  const board = $("global-board");
+  const existing = new Map([...board.children].map((li) => [li.dataset.userId, li]));
+  const rows = data.rows.map((row) => {
+    let li = existing.get(String(row.user_id));
+    if (!li) {
+      li = document.createElement("li");
+      li.dataset.userId = String(row.user_id);
+      li.innerHTML = '<span class="lb-rank tnum"></span><span class="lb-name"><span class="lb-who"></span><span class="lb-you" hidden>YOU</span></span><span class="lb-num tnum"><span class="global-score"></span><span class="lb-unit"></span></span><span class="global-record"></span><span class="lb-track" aria-hidden="true"><span class="lb-bar"></span></span>';
+    }
+    const score = number.format(row.score);
+    const date = row.period.length === 4 ? row.period : new Date(`${row.period}${row.period.length === 7 ? "-01" : ""}T12:00:00`).toLocaleDateString(undefined, {
+      year: "numeric", month: "short", ...(row.period.length === 10 ? { day: "numeric" } : {}),
+    });
+    li.className = `lb${row.me ? " is-me" : ""}${row.rank === 1 ? " is-top" : ""}`;
+    li.querySelector(".lb-rank").textContent = row.rank;
+    li.querySelector(".lb-who").textContent = row.username;
+    li.querySelector(".lb-you").hidden = !row.me;
+    li.querySelector(".global-score").textContent = score;
+    li.querySelector(".lb-unit").textContent = unit;
+    li.querySelector(".global-record").textContent = average ? `Since ${date}` : date;
+    li.querySelector(".lb-bar").style.setProperty("--share", String(row.score / peak));
+    li.setAttribute("aria-label", `Rank ${row.rank}, ${row.username}${row.me ? ", you" : ""}, ${score} ${unit}, ${average ? "since " : ""}${date}`);
+    return li;
+  });
+  reconcile(board, rows);
+}
+
 /* ---------------------------------------------------------- friends */
 
 // Mirrors declineBlockDays in api.go.
@@ -1428,6 +1524,7 @@ async function loadFriends() {
   renderRequests();
   renderBoard();
   renderCrew();
+  if (state.view === "crew") loadGlobalBoard();
 }
 
 // One incoming request. Nothing about it can change while it is open — it is
@@ -1983,6 +2080,10 @@ function drainPending() {
 /* ---------------------------------------------------------- boot */
 
 async function enterApp() {
+  globalBoardRequest++;
+  globalBoardData = null;
+  globalBoardLoading = false;
+  $("global-board").replaceChildren();
   $("gate").hidden = true;
   $("app").hidden = false;
   $("startup").hidden = true;
@@ -2077,6 +2178,10 @@ function wire() {
   calendarSwipe = setupCalendarSwipe();
   $("day-today").addEventListener("click", () => loadDay(state.today).catch((e) => toast(e.message)));
 
+  $("scope-everyone").addEventListener("click", () => setBoardScope("everyone"));
+  $("scope-crew").addEventListener("click", () => setBoardScope("crew"));
+  $("leaderboard-metric").addEventListener("change", () => loadGlobalBoard(true));
+  $("leaderboard-retry").addEventListener("click", () => loadGlobalBoard(true));
   wireTablist(".vtab", (tab) => setView(tab.dataset.view));
   wireTablist(".ptab", (tab) => {
     state.period = tab.dataset.period;
