@@ -402,11 +402,20 @@
 
 <dialog id="settings" class="settings" aria-labelledby="settings-title">
   <div class="settings-head">
-    <h2 id="settings-title" class="band-title">Settings</h2>
+    <button id="settings-back" class="btn btn-ghost btn-icon" type="button" aria-label="Back to settings" hidden><svg class="ico" aria-hidden="true"><use href="#i-left"></use></svg></button>
+    <h2 id="settings-title" class="band-title" tabindex="-1">Settings</h2>
     <button id="settings-close" class="btn btn-ghost btn-icon" type="button" aria-label="Close settings" autofocus><svg class="ico" aria-hidden="true"><use href="#i-close"></use></svg></button>
   </div>
-  <section class="settings-section" aria-labelledby="appearance-title">
-    <h3 id="appearance-title" class="band-title">Appearance</h3>
+  <div class="settings-workspace">
+    <nav class="settings-nav" aria-label="Settings sections">
+      <a href="#appearance-settings"><span><strong>Appearance</strong><small>Theme and color mode</small></span><svg class="ico" aria-hidden="true"><use href="#i-right"></use></svg></a>
+      <a href="#goal-settings" hidden><span><strong>Training</strong><small>Your daily goal</small></span><svg class="ico" aria-hidden="true"><use href="#i-right"></use></svg></a>
+      <a href="#account-settings" hidden><span><strong>Account &amp; security</strong><small>Recovery email and passkeys</small></span><svg class="ico" aria-hidden="true"><use href="#i-right"></use></svg></a>
+      <a href="#about-settings"><span><strong>About</strong><small>What’s new</small></span><svg class="ico" aria-hidden="true"><use href="#i-right"></use></svg></a>
+    </nav>
+    <div class="settings-content">
+  <section id="appearance-settings" class="settings-section" aria-labelledby="appearance-title">
+    <h3 id="appearance-title" class="band-title" tabindex="-1">Appearance</h3>
     <label class="theme-setting" for="classic-theme">
       <span><strong>Use classic theme</strong><small>Orange accents and bold type. Off for the green, plant-based theme.</small></span>
       <input id="classic-theme" class="theme-switch" type="checkbox" role="switch" aria-describedby="theme-note">
@@ -424,7 +433,7 @@
     <p id="theme-status" class="hint" role="status" hidden></p>
   </section>
   <section id="goal-settings" class="settings-section" aria-labelledby="training-title" hidden>
-    <h3 id="training-title" class="band-title">Training</h3>
+    <h3 id="training-title" class="band-title" tabindex="-1">Training</h3>
     <h4 id="goal-settings-title" class="settings-subtitle">Daily goal</h4>
     <p id="goal-current" class="hint"></p>
     <form id="goal-form" class="stack">
@@ -439,7 +448,7 @@
     <details id="goal-history-details" hidden><summary>Goal history</summary><ul id="goal-history" class="goal-history"></ul></details>
   </section>
   <section id="account-settings" class="settings-section" aria-labelledby="account-settings-title" hidden>
-    <h3 id="account-settings-title" class="band-title">Account &amp; security</h3>
+    <h3 id="account-settings-title" class="band-title" tabindex="-1">Account &amp; security</h3>
     <section class="account-section" aria-labelledby="account-email-title">
       <h4 id="account-email-title" class="settings-subtitle">Recovery email</h4>
       <p id="account-email-status" class="hint" role="status">Loading account…</p>
@@ -464,14 +473,16 @@
     </section>
     <section id="account-passkeys" class="account-section" aria-label="Passkeys"></section>
   </section>
-  <section class="settings-section" aria-labelledby="about-title">
-    <h3 id="about-title" class="band-title">About</h3>
+  <section id="about-settings" class="settings-section" aria-labelledby="about-title">
+    <h3 id="about-title" class="band-title" tabindex="-1">About</h3>
     <details id="whats-new" class="release-notes">
       <summary>What’s new <span id="release-unread" class="release-unread" hidden>New</span></summary>
       <p class="hint">Updates included in this version. Available offline.</p>
       __CHANGELOG__
     </details>
   </section>
+    </div>
+  </div>
 </dialog>
 
 <dialog id="confirm-action" class="confirm-dialog bottom-sheet" aria-labelledby="confirm-title" aria-describedby="confirm-message">
@@ -488,6 +499,7 @@
 <script src="/changelog.js?v=__BUILD__" defer></script>
 <script src="/quotes.js?v=__BUILD__" defer></script>
 <script src="/offline.js?v=__BUILD__" defer></script>
+<script src="/settings.js?v=__BUILD__" defer></script>
 <script src="/account.js?v=__BUILD__" defer></script>
 <script src="/passkeys.js?v=__BUILD__" defer></script>
 <script src="/app.js?v=__BUILD__" defer></script>

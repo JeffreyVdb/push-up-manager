@@ -22,6 +22,7 @@ const PRECACHE = [
   "/theme.js?v=__BUILD__",
   "/offline.js?v=__BUILD__",
   "/quotes.js?v=__BUILD__",
+  "/settings.js?v=__BUILD__",
   "/account.js?v=__BUILD__",
   "/passkeys.js?v=__BUILD__",
   "/app.js?v=__BUILD__",

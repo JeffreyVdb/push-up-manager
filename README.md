@@ -91,10 +91,11 @@ again. Goal history is account-scoped and included in offline snapshots. Offline
 sets count toward their original day's target immediately; deleting reps can
 remove completion. The existing streak statistic still counts days with activity.
 
-On phones, Settings uses a full-screen layout with a pinned close button, safe-area
-padding and a large numeric goal field. The calendar shortcut sits above the
-grid; completing a goal brings its reflection into view after the logging sheet
-closes. Both themes remain usable at 320px wide.
+On phones, Settings opens a full-screen category list. Each category opens its own
+screen with Back and Close controls, safe-area padding and a large numeric goal
+field. The calendar shortcut sits above the grid; completing a goal brings its
+reflection into view after the logging sheet closes. Both themes remain usable
+at 320px wide.
 
 The calendar combines activity heat with a checkmark and underline for achieved
 goals. Select a day to see its target, progress and start date. A completion check
@@ -144,10 +145,14 @@ light and dark variants. **Color mode** defaults to **System (automatic)**,
 following the device/browser's preferred color scheme and reacting to changes
 while the app is open. Choose **Light** or **Dark** to override it.
 
-Settings groups these controls under **Appearance**, daily goals under
-**Training**, recovery email and passkeys under **Account & security**, and
-release notes under **About** at the end. Before sign-in, only Appearance and
-About are shown.
+Settings opens a list of **Appearance**, **Training**, **Account & security**,
+and **About**, with a short description for each. On phones, tap a category to
+open its screen; Back returns to the list. Browser/device Back also returns to
+the list, then closes Settings. On desktop, a wide dialog keeps the category
+sidebar next to the selected section. Before sign-in, only Appearance and About
+are available. Navigation preserves form drafts and moves keyboard focus to
+the destination heading. Daily goal and Add email shortcuts open their section
+directly. Closing Settings clears password fields.
 
 Theme (`pushup-counter:theme`) and mode (`pushup-counter:mode`) are independent
 browser-local preferences, applied before styles load and synchronized across
@@ -361,6 +366,10 @@ go run ./tools/genicons   # redraw the app icons
 changes, independent persistence, cross-tab sync, denied storage, draft retention,
 text-token contrast, control-boundary contrast, and offline release notes (default port `5580`). Use
 `PUSHUP_SCREENSHOTS` to capture phone and desktop views.
+`tests/browser-settings.cjs` checks mobile category screens and Back navigation,
+the desktop sidebar at 320–1440px, keyboard focus, direct shortcuts, draft
+retention, password clearing, 200% text scaling, theme/mode variants, resize,
+sign-out, app routes and offline navigation (port `5582`).
 `tests/browser-contrast.cjs` audits rendered text with axe-core across sign-in,
 recovery, account settings, release notes, goals, logging, the variation picker,
 both boards, and destructive confirmations, including hover/pressed states and desktop/phone layouts.

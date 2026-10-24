@@ -72,7 +72,7 @@ const captures=process.env.PUSHUP_SCREENSHOTS;
       const response=await r.fetch();const account=await response.json();account.email='test@example.invalid';account.email_verified=true;
       await r.fulfill({response,json:account});
     });
-    await page.locator('#app [data-open-settings]').click();await page.locator('#account-email-remove').waitFor({state:'visible'});
+    await page.locator('#app [data-open-settings]').click();await page.locator('.settings-nav [href="#account-settings"]').click();await page.locator('#account-email-remove').waitFor({state:'visible'});
     await page.locator('#account-password').fill('confirmation-password');
     await page.locator('#account-email-remove').click();await page.locator('#confirm-action').waitFor({state:'visible'});
     await page.locator('#confirm-cancel').click();assert.ok(await page.locator('#settings').isVisible());

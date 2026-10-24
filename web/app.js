@@ -2102,11 +2102,12 @@ function wire() {
   const themeToggle = $("classic-theme");
   themeToggle.checked = document.documentElement.dataset.theme === "classic";
   for (const button of document.querySelectorAll("[data-open-settings]")) {
-    button.addEventListener("click", () => { openGoalSettings(); settings.showModal(); });
+    button.addEventListener("click", () => { openGoalSettings(); window.PushupSettings.open(); });
   }
   for (const button of document.querySelectorAll("[data-open-goals]")) {
-    button.addEventListener("click", () => { openGoalSettings(); settings.showModal(); $("goal-settings").scrollIntoView({ block: "start" }); $("goal-target").focus({ preventScroll: true }); });
+    button.addEventListener("click", () => { openGoalSettings(); window.PushupSettings.open("goal-settings"); });
   }
+  $("email-prompt-settings").addEventListener("click", openGoalSettings);
   $("goal-target").addEventListener("input", previewGoal);
   $("goal-form").addEventListener("submit", saveGoal);
   $("settings-close").addEventListener("click", () => settings.close());

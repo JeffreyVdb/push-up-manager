@@ -20,7 +20,8 @@ const base = process.env.PUSHUP_TEST_URL || 'http://localhost:5580';
         const manualChecks=[];
         // Scroll clipped dialog content into view and recheck it in isolation.
         for(const rule of report.incomplete) for(const node of rule.nodes) {
-          const locator=p.locator(root||'body').locator(node.target.join(' ')).first();
+          // axe can report the audit root itself, not only its descendants.
+          const locator=p.locator(node.target.join(' ')).first();
           if(await locator.count() && !node.target.includes('.tail')) {
             await locator.evaluate(el=>{el.scrollIntoView({block:'center'});el.setAttribute('data-contrast-check','')});
             const retry=await p.evaluate(()=>window.axe.run('[data-contrast-check]',{runOnly:{type:'rule',values:['color-contrast']}}));
@@ -71,7 +72,7 @@ const base = process.env.PUSHUP_TEST_URL || 'http://localhost:5580';
       await audit('sign-in');
       await p.locator('#auth-submit').hover();await p.waitForTimeout(150);await audit('sign-in hover','#auth-submit');
       await p.mouse.down();await audit('sign-in pressed','#auth-submit');await p.mouse.up();
-      await p.locator('#gate [data-open-settings]').click();await p.locator('#whats-new summary').click();await audit('signed-out settings','#settings');await p.locator('#settings-close').click();
+      await p.locator('#gate [data-open-settings]').click();await p.locator('.settings-nav [href="#about-settings"]').click();await p.locator('#whats-new summary').click();await audit('signed-out settings','#settings');await p.locator('#settings-close').click();
       await p.goto(base+'/forgot-password');await p.locator('#recovery').waitFor({state:'visible'});await audit('password recovery');
       await p.goto(base);await p.locator('[data-mode=register]').click();
       await p.locator('#auth-user').fill(`contrast_${theme}_${mode}_${Date.now()}`);await p.locator('#auth-pass').fill('contrast-test-password');await p.locator('#auth-submit').click();await p.locator('#app').waitFor({state:'visible'});
@@ -91,8 +92,13 @@ const base = process.env.PUSHUP_TEST_URL || 'http://localhost:5580';
         await audit('delete confirmation','#confirm-action');
         await p.locator('#confirm-cancel').click();
         await p.locator('#app [data-open-settings]').click();
-        if(!await p.locator('#whats-new').evaluate(el=>el.open))await p.locator('#whats-new summary').click();
-        await audit('settings with account and goal','#settings');
+        await audit('settings overview','#settings');
+        for (const id of ['appearance-settings','account-settings','about-settings','goal-settings']) {
+          if (await p.locator('#settings-back').isVisible()) await p.locator('#settings-back').click();
+          await p.locator(`.settings-nav [href="#${id}"]`).click();
+          if (id === 'about-settings' && !await p.locator('#whats-new').evaluate(el=>el.open)) await p.locator('#whats-new summary').click();
+          await audit(id,'#settings');
+        }
         await p.evaluate(()=>{const error=document.querySelector('#goal-settings-error');error.hidden=false;error.textContent='Reconnect to save a goal. Your saved targets still apply offline.'});
         await audit('settings error','#goal-settings-error');
         await p.locator('#settings-close').click();

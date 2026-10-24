@@ -22,7 +22,7 @@ func TestReleaseNotesShipInVersionedShell(t *testing.T) {
 		t.Fatal("shell must contain bundled release notes and resolved build IDs")
 	}
 	worker := string(s.rewritten["sw.js"])
-	for _, asset := range []string{"appearance.css", "changelog.js", "confirm.js", "sheet.js"} {
+	for _, asset := range []string{"appearance.css", "changelog.js", "confirm.js", "sheet.js", "settings.js"} {
 		url := "/" + asset + "?v=" + s.buildID
 		if !strings.Contains(shell, url) || !strings.Contains(worker, url) {
 			t.Fatalf("%s must ship in both the HTML and offline precache", asset)

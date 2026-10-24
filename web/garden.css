@@ -17,21 +17,22 @@
 .gate-inner { position: relative; }
 .gate-tools { position: absolute; right: 0; top: -4rem; }
 .settings {
-  width: min(28rem, calc(100% - 2rem));
-  max-height: calc(100dvh - 2rem);
-  padding: 1.5rem;
+  width: min(58rem, calc(100% - 4rem));
+  height: min(44rem, calc(100dvh - 4rem));
+  max-height: calc(100dvh - 4rem);
+  padding: 0;
+  overflow: hidden;
   background: var(--slab);
   color: var(--bone);
   border: 1px solid var(--rule);
   font: inherit;
 }
+.settings[open] { display: flex; flex-direction: column; }
 .settings::backdrop { background: rgb(7 24 17 / .6); }
-.settings-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-.settings-head .band-title { padding: 0; font-size: 1.5rem; }
+.settings-head { display: flex; flex: 0 0 auto; align-items: center; gap: .5rem; padding: .75rem 1.5rem; border-bottom: 1px solid var(--rule); }
+.settings-head .band-title { flex: 1; min-width: 0; padding: 0; font-size: 1.5rem; }
 .settings-intro { margin: .5rem 0 1.5rem; color: var(--ash); }
-.settings-section { padding-block: 1.5rem; }
-.settings-section + .settings-section { border-top: 1px solid var(--rule); }
-.settings-section:last-child { padding-bottom: 0; }
+.settings-section:not([data-active]) { display: none; }
 .settings-section > .band-title { padding: 0; margin-bottom: 1.25rem; }
 .settings-subtitle { margin: 0 0 .75rem; font: 600 1rem/1.5 var(--text); }
 .settings-section > .hint { margin-top: 1rem; overflow-wrap: anywhere; }
@@ -376,16 +377,41 @@
 :where([data-theme="plant"]) .goal-check { color: var(--signal); }
 :where([data-theme="plant"]) #goal-quote { font-family: var(--display); font-weight: 500; font-size: 1.25rem; }
 
-/* Settings stay navigable with one thumb, even midway through a long form. */
-.settings { overscroll-behavior: contain; scroll-padding-top: 5rem; }
-.settings-head {
-  position: sticky;
-  top: -1.5rem;
-  z-index: 2;
-  margin: -1.5rem -1.5rem 0;
-  padding: .75rem 1.5rem;
-  background: var(--slab);
-  border-bottom: 1px solid var(--rule);
+/* Desktop list/detail becomes a category list and individual screens on phones. */
+.settings-workspace { display: grid; grid-template-columns: 15rem minmax(0, 1fr); flex: 1; min-height: 0; }
+.settings-nav {
+  padding: 1rem .75rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--ink);
+  border-right: 1px solid var(--rule);
+}
+.settings-nav a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  min-height: 80px;
+  padding: 1rem .75rem;
+  color: var(--bone);
+  font: 400 .875rem/1.5 var(--text);
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+.settings-nav a > span { min-width: 0; }
+.settings-nav strong { display: block; font-weight: 600; }
+.settings-nav small { display: block; margin-top: .25rem; color: var(--ash); font-size: .75rem; }
+.settings-nav .ico { flex: 0 0 auto; color: var(--ash); }
+.settings-nav a:hover, .settings-nav a:active { background: var(--slab-2); }
+.settings-nav a[aria-current] { background: var(--slab); }
+.settings-nav a[aria-current] strong { text-decoration: underline; text-decoration-color: var(--signal); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+:where([data-theme="plant"]) .settings-nav a { border-radius: 8px; }
+.settings-content {
+  padding: 1.5rem 2rem 2rem;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-padding-block: 1.5rem;
 }
 @media (max-width: 47.999rem) {
   .settings {
@@ -395,12 +421,18 @@
     max-height: 100dvh;
     margin: 0;
     border: 0;
-    padding: calc(1rem + env(safe-area-inset-top, 0px)) 1rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
   }
   :where([data-theme="plant"]) .settings { border-radius: 0; }
   .settings-head {
-    top: calc(-1rem - env(safe-area-inset-top, 0px));
-    margin: calc(-1rem - env(safe-area-inset-top, 0px)) -1rem 0;
     padding: calc(.5rem + env(safe-area-inset-top, 0px)) 1rem .5rem;
   }
+  .settings-head .band-title { font-size: 1.25rem; }
+  .settings-workspace { grid-template-columns: minmax(0, 1fr); }
+  .settings-nav { padding: .5rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px)); background: var(--slab); border: 0; }
+  .settings-nav a { min-height: 88px; padding: 1.25rem .5rem; font-size: 1rem; border-radius: 0; border-bottom: 1px solid var(--rule); }
+  .settings-nav small { font-size: .8125rem; }
+  .settings-nav a:last-child { border-bottom: 0; }
+  .settings[data-section] .settings-nav, .settings:not([data-section]) .settings-content { display: none; }
+  .settings-content { padding: 1.5rem 1rem calc(1.5rem + env(safe-area-inset-bottom, 0px)); }
+  .settings-section > .band-title { display: none; }
 }

@@ -110,7 +110,7 @@ const captures = process.env.PUSHUP_SCREENSHOTS;
     const input = await touch.locator('#goal-target').boundingBox();
     assert.ok(input.height>=48 && input.width>=250,'large phone input');
     await touch.locator('#goal-target').fill('150');
-    await touch.evaluate(()=>document.querySelector('#settings').scrollTop=10000);
+    await touch.evaluate(()=>document.querySelector('.settings-content').scrollTop=10000);
     const close = await touch.locator('#settings-close').boundingBox();
     assert.ok(close.y>=0 && close.y+close.height<100,'close remains pinned while scrolling');
     await touch.locator('#goal-target').scrollIntoViewIfNeeded();

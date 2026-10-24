@@ -171,8 +171,8 @@ window.AppAccount = (() => {
     el("account-email-remove").addEventListener("click", () => changeEmail("remove"));
     el("email-prompt-dismiss").addEventListener("click", dismissPrompt);
     el("email-prompt-settings").addEventListener("click", () => {
-      el("settings").showModal();
-      el("account-email").focus();
+      window.PushupSettings.open("account-settings");
+      el("account-email").focus({ preventScroll: true });
     });
     el("recovery-form").addEventListener("submit", submitRecovery);
     for (const button of document.querySelectorAll("[data-open-settings]")) {
