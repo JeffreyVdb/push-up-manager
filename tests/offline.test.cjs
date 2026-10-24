@@ -177,3 +177,37 @@ test('a late session response cannot undo explicit offline sign-out', async () =
   assert.equal(await storage.get('meta', 'active'), 0);
   assert.equal(log.userID, 0);
 });
+
+test('dated goals survive offline reload, include queued reps and preserve earlier targets', async () => {
+  const { log, storage, server, make } = await prepared();
+  const account = await log.account();
+  account.snapshot.goals = [{effective_day:'2026-09-05',target:100},{effective_day:'2026-09-10',target:150}];
+  await storage.put('accounts',1,account);
+  server.online = false;
+  await log.enqueue({type_id:2,count:100,day:'2026-09-05'},'Standard');
+  const restored = make(); await restored.restore();
+  assert.equal((await restored.read('/api/day/2026-09-04')).goal,null);
+  assert.equal((await restored.read('/api/day/2026-09-05')).goal.target,100);
+  assert.equal((await restored.read('/api/day/2026-09-05')).total,100);
+  assert.equal((await restored.read('/api/day/2026-09-09')).goal.target,100);
+  assert.equal((await restored.read('/api/day/2026-09-10')).goal.target,150);
+  assert.equal((await restored.read('/api/calendar?year=2026&month=9')).goals.length,2);
+  assert.equal((await restored.read('/api/goals')).goals.length,2);
+});
+
+test('cached restoration is not evidence of a failed connection and preserves its server clock', async () => {
+  const { server, make, storage } = await prepared();
+  const before = await storage.get('accounts',1);
+  const restored = make();
+  const session = await restored.restore();
+  assert.equal(restored.online,null,'connection has not been checked yet');
+  assert.equal(session.cached,true);
+  assert.equal(session.offline,false);
+  assert.equal((await storage.get('accounts',1)).clock,before.clock);
+  server.online = false;
+  await restored.refresh();
+  assert.equal(restored.online,false,'failed request confirms offline');
+  server.online = true;
+  await restored.refresh();
+  assert.equal(restored.online,true,'successful refresh confirms connected');
+});

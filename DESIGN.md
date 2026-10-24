@@ -207,6 +207,8 @@ Below 48rem, the plant view stacks introduction, statistics, calendar, selected 
 
 At widths below 359px the header tightens further. Calendar controls remain numeric and readable at 320px; narrow seven-column cells are the documented exception to the general 48px touch-target goal. Do not introduce horizontal page scrolling to force wider cells.
 
+Settings shares the phone breakpoint in both themes: below 48rem it fills the viewport (100dvh), with square corners, 1rem side padding and safe-area padding above and below. Its opaque, ruled header keeps the close control visible while forms scroll. Desktop retains the 28rem dialog, 1.5rem padding and viewport height limit; the header remains sticky there too.
+
 ## Elevation & Depth
 
 Most hierarchy comes from tonal panels, spacing and thin rules. The calendar and selected day are flat; shadows identify controls that float above content. The dock uses `--shadow-lift` (0 -12px 36px -20px rgb(32 61 46 / .22)); the mobile action uses a downward shadow (0 8px 24px -8px rgb(32 61 46 / .35)). Settings uses a native dialog and a dark translucent backdrop (rgb(7 24 17 / .6)). Classic retains its original darker dock shadow.
@@ -215,7 +217,7 @@ Shared motion keeps the existing mechanical scoreboard grammar: changed numbers 
 
 ## Shapes
 
-Plant controls use softly curved corners: quick keys (6px), buttons and fields (8px), calendar days (10px desktop, 7px mobile), desktop picker (12px), and major panels and Settings (16px). The mobile sheet rounds its top corners only; its full-screen picker has square corners. The mobile logging action is a 56px-high pill with 28px ends and a minimum width of 144px. Icon buttons and request badges are circular.
+Plant controls use softly curved corners: quick keys (6px), buttons and fields (8px), calendar days (10px desktop, 7px mobile), desktop picker (12px), and major panels and desktop Settings (16px). The mobile sheet rounds its top corners only; its full-screen picker and Settings have square corners. The mobile logging action is a 56px-high pill with 28px ends and a minimum width of 144px. Icon buttons and request badges are circular.
 
 Classic retains square controls and panels, with its original circular mobile action. The shared theme switch is a deliberate rounded control in both worlds. Do not translate plant radii into Classic by editing unscoped selectors.
 
@@ -232,6 +234,10 @@ The `LOG` / `CREW`, account and leaderboard period tabs retain their ARIA tab be
 The calendar is a Monday-first table inside the paper panel. Each day carries a visible date, total and full accessible name. Today has `aria-current="date"` and an outer signal outline separated from the fill; historical selection uses an inset border. The month total and month navigation keep their existing meanings and announcements. Preserve the four-column statistics row and its thin dividers; figures remain distinct from the calendar's month total.
 
 The lavender selected-day panel holds its date, total and entry rows. Variations sit below it without another enclosing panel. Inline removal controls and empty states keep the original direct wording.
+
+Goal completion adds an SVG check and a bottom rule to the calendar cell without changing activity heat, today or selection styling. A text legend and daily-goal shortcut precede the grid; the completed-days count explains that each date uses its own target. Accessible day names include the target and completion state.
+
+The selected-day goal sits between thin rules with explicit total/target text, the target's start date and a narrow signal-colored progress bar. Completion reveals a check and a reflection with smaller attribution and an underlined source link when available. ROOTED uses Fraunces (1.25rem, weight 500) for the reflection; Classic uses the shared body face (1.125rem). This calm completion copy is the requested exception to the rough logging voice. Crossing the target reveals the check and reflection over 700ms; unchanged refreshes do not replay it. A committed set that reaches the target brings the goal panel into view when needed. Reduced motion preserves the result without animation or smooth scrolling.
 
 ### Logging and variation picker
 
@@ -251,11 +257,13 @@ The request banner stays in sticky chrome and is capped at 42svh with internal s
 
 Settings is available on both sign-in and app headers. Its native modal dialog provides focus containment, Escape dismissal and focus return. The **Classic theme** switch selects `classic` when on and `plant` when off; plant is the default for missing or unknown preferences.
 
+Signed-in Settings places **Daily goal** between appearance and account recovery. Its numeric field keeps the shared 1rem input text and requests a numeric phone keyboard. The preview names the start date and explains same-day replacement before the save action; earlier targets appear in a collapsible history. Goal controls and status messages inherit the existing field, action and alert treatments in both themes.
+
 `web/theme.js` runs before styles and reads `pushup-counter:theme` from localStorage. It updates the root theme, browser color scheme, theme-color metadata and favicon; storage events synchronize tabs, including a return to plant when storage is cleared. Switching requires no reload and preserves drafts and app state. When saving is denied, the theme still changes for the visit and Settings states: “Theme changed for this visit. Enable browser storage to remember it.” Theme remains a browser-local preference; recovery email, permanent reminder dismissal and passkey registrations are persisted through the account APIs.
 
 ### Account, recovery and connection states
 
-Signed-in Settings adds **Recovery email** and **Passkeys** below appearance. Keep the existing 28rem dialog, 1.5rem padding and viewport height limit; account sections use a thin rule, 2rem top margin and 1.5rem top padding. Forms retain the shared field stack and 52px inputs. Action rows wrap with .5rem gaps and 48px minimum button height. Named passkeys use plain divided rows with a removal action; long names and addresses wrap. Account controls inherit the active theme's typography, colors and shapes.
+Signed-in Settings adds **Recovery email** and **Passkeys** below the daily goal. Account sections use a thin rule, 2rem top margin and 1.5rem top padding within the responsive Settings surface. Forms retain the shared field stack and 52px inputs. Action rows wrap with .5rem gaps and 48px minimum button height. Named passkeys use plain divided rows with a removal action; long names and addresses wrap. Account controls inherit the active theme's typography, colors and shapes.
 
 Email remains optional. The account suggestion uses sage-well fill, a thin rule, direct text and `ADD EMAIL` / dismissal actions. A saved dismissal persists for the account. Settings distinguishes verified and pending addresses and exposes confirmation resend and removal when applicable. Email changes and passkey registration/removal require the current password; destructive removal uses explicit confirmation. Passkey availability, request progress, cancellation and failures use text status or alert messages beside the relevant form. Do not replace the password path with the passkey alternative.
 

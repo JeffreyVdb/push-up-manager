@@ -98,7 +98,7 @@ func openStore(path string) (*store, error) {
 		db.Close()
 		return nil, err
 	}
-	if _, err := db.Exec(schema + accountSchema + passkeySchema); err != nil {
+	if _, err := db.Exec(schema + accountSchema + passkeySchema + goalSchema); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("apply schema: %w", err)
 	}

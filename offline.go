@@ -125,9 +125,14 @@ func (s *server) handleOfflineSnapshot(w http.ResponseWriter, r *http.Request, s
 		writeError(w, 500, "could not load offline data")
 		return
 	}
+	goals, err := readGoals(r.Context(), tx, sess.UserID)
+	if err != nil {
+		writeError(w, 500, "could not load offline goals")
+		return
+	}
 	if err = tx.Commit(); err != nil {
 		writeError(w, 500, "could not load offline data")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"user_id": sess.UserID, "types": types, "entries": entries})
+	writeJSON(w, http.StatusOK, map[string]any{"user_id": sess.UserID, "types": types, "entries": entries, "goals": goals})
 }

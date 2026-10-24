@@ -23,7 +23,10 @@ pushup-counter: ELF 64-bit LSB executable, x86-64, statically linked, stripped
   colour is never the only channel. The default plant theme uses a continuous
   green ramp; Classic keeps the original cool-to-hot ramp. Logged days retain
   a dark foreground, and an outer border marks today.
-- Today / 7-day / month / all-time totals, best day, and current streak.
+- Dated daily goals: a goal starts on the day it is saved. Earlier dates keep
+  their previous target; days before the first goal stay unmarked. Completed
+  calendar days show a check, and reaching a goal reveals a calm daily reflection.
+- Today / 7-day / month / all-time totals, best day, and current activity streak.
 - **Friends and a shared leaderboard.** Add someone by username; they accept or
   decline from a banner pinned under the top bar. The board ranks you and your
   friends for today, this week (Monday–Sunday), this month, and all time, as
@@ -45,7 +48,8 @@ refresh while it is open; reopen the app to sync if it was closed.
 
 Startup restores the saved log before checking the network, including when a
 connection stalls without reporting offline. A visible startup screen covers
-the initial local read and first sign-in check; the application never waits on
+the initial local read and first sign-in check; restoring cached data does not claim the device is offline
+until the browser reports offline or a request fails. The application never waits on
 a server timeout to display a prepared device's log. First-time service-worker
 activation does not reload or interrupt sign-in.
 
@@ -66,6 +70,44 @@ session asks you to sign in before syncing. Clearing site data or uninstalling
 a browser can remove unsynced sets; allow browser storage for offline logging.
 Changing variations, crew and existing entries requires a connection. Offline
 dates advance from the last known server midnight until the server is reachable.
+
+## Daily goals and reflections
+
+Set a **Daily goal** in Settings or use the calendar's goal shortcut. Every
+variation counts. The preview names the exact start date and explains that the
+target continues until the next change. Saving again on the same date replaces
+that date's target, including for reps already logged. For example, 100 saved
+on September 5 applies September 5 onward; 150 saved on September 10 leaves
+September 5–9 at 100. September 4 is not retroactively marked complete.
+
+Goal changes require a connection. Dates use the server's calendar, matching rep
+logging; a save across midnight is rejected so the start date can be reviewed
+again. Goal history is account-scoped and included in offline snapshots. Offline
+sets count toward their original day's target immediately; deleting reps can
+remove completion. The existing streak statistic still counts days with activity.
+
+On phones, Settings uses a full-screen layout with a pinned close button, safe-area
+padding and a large numeric goal field. The calendar shortcut sits above the
+grid; completing a goal brings its reflection into view after the logging sheet
+closes. Both themes remain usable at 320px wide.
+
+The calendar combines activity heat with a checkmark and underline for achieved
+goals. Select a day to see its target, progress and start date. A completion check
+and reflection animate once when crossing a target; reduced-motion preferences
+suppress animation. Reflections have a calmer voice than the existing logging UI.
+
+QuoteSlate and ZenQuotes provide optional reflective quotes through the server.
+Adapters validate and filter content, time out after 2.5 seconds each, and fall
+back in order. Successful batches are shared for 24 hours; failures back off for
+an hour, retaining an older usable batch. Providers receive no account or workout
+data. Each external quote shows its author and a provider attribution link.
+
+**15 original reflections** ship in the cached app shell, labelled “Daily
+reflection.” A selection stays fixed for each date on that device, including on
+reload or offline. Device history avoids repeats on adjacent dates and the last
+viewed date; clearing site data resets that history. Provider batches warm in the
+background for later dates, so reaching a goal never waits on a quote API.
+See [provider research](research/quotes.md) for sources, constraints and checks.
 
 ## Account recovery and passkeys
 
@@ -247,6 +289,15 @@ routes. Run a disposable test server on `http://localhost:5573`, then run
 `node tests/browser-flows.cjs` with Playwright available. It creates test accounts
 and sets. Optional environment variables: `PUSHUP_TEST_URL`, `PLAYWRIGHT_MODULE`,
 `CHROMIUM_PATH`, and `PUSHUP_SCREENSHOTS` (capture directory).
+
+`tests/browser-goals.cjs` runs against a disposable server (default port `5575`)
+and checks date-aware completion, goal previews and replacement, offline
+reload/sync, deletion, quote persistence, both themes and reduced motion. It
+accepts the same Playwright and screenshot environment variables.
+
+`tests/browser-connectivity.cjs` watches the startup DOM for even transient
+false offline messages during a successful desktop refresh, and confirms that
+failed requests and airplane mode still show the notice (default port `5575`).
 
 `tests/browser-startup.cjs` uses the same options (default port `5574`) to check
 visible startup during a stalled connection, cached rendering before any API

@@ -38,6 +38,7 @@ type server struct {
 	heartbeat time.Duration
 	accounts  *accountService
 	passkeys  *passkeyService
+	quotes    *quoteService
 }
 
 func newServer(st *store) *server {
@@ -53,6 +54,7 @@ func newServer(st *store) *server {
 		events:        newEventHub(),
 		heartbeat:     eventHeartbeat,
 	}
+	s.quotes = newQuoteService()
 	s.accounts = &accountService{store: st}
 	s.passkeys = newPasskeyService(st, os.Getenv("PUSHUP_PUBLIC_URL"))
 	s.buildID = assetsBuildID(sub)
@@ -123,6 +125,9 @@ func (s *server) handler() http.Handler {
 	mux.HandleFunc("GET /api/calendar", s.auth(s.handleCalendar))
 	mux.HandleFunc("GET /api/overview", s.auth(s.handleOverview))
 	mux.HandleFunc("GET /api/offline", s.auth(s.handleOfflineSnapshot))
+	mux.HandleFunc("GET /api/quotes", s.auth(s.handleQuotes))
+	mux.HandleFunc("GET /api/goals", s.auth(s.handleGoals))
+	mux.HandleFunc("PUT /api/goals", s.auth(s.csrf(s.handleSaveGoal)))
 
 	mux.HandleFunc("GET /api/events", s.auth(s.handleEvents))
 

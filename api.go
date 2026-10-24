@@ -312,7 +312,12 @@ func (s *server) handleDay(w http.ResponseWriter, r *http.Request, sess *session
 	for _, e := range entries {
 		total += e.Count
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"day": day, "total": total, "entries": entries})
+	goals, err := readGoals(r.Context(), s.store.db, sess.UserID)
+	if err != nil {
+		writeError(w, 500, "Could not load daily goals.")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"day": day, "total": total, "entries": entries, "goal": goalForDay(goals, day)})
 }
 
 // handleCalendar returns per-day totals for one month, plus the padding needed
@@ -346,7 +351,13 @@ func (s *server) handleCalendar(w http.ResponseWriter, r *http.Request, sess *se
 
 	// Monday-first offset: Go's Sunday==0 becomes 6.
 	lead := (int(start.Weekday()) + 6) % 7
+	goals, err := readGoals(r.Context(), s.store.db, sess.UserID)
+	if err != nil {
+		writeError(w, 500, "Could not load daily goals.")
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
+		"goals":      goals,
 		"year":       year,
 		"month":      month,
 		"days":       end.Day(),

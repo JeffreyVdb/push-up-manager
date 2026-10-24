@@ -44,7 +44,7 @@ async function api(method, path, body) {
     if (cached !== undefined) return cached;
   }
   const result = await networkAPI(method, path, body);
-  if (offline?.userID && !offlineUnavailable && method !== "GET" && /^\/api\/(types|reps|friends)(\/|$)/.test(path)) await offline.refresh();
+  if (offline?.userID && !offlineUnavailable && method !== "GET" && /^\/api\/(types|reps|friends|goals)(\/|$)/.test(path)) await offline.refresh();
   return result;
 }
 
@@ -327,6 +327,8 @@ async function adoptSession(res) {
 async function logout() {
   disconnectEvents();
   window.AppAccount?.leave();
+  goalSettingsGen++;
+  setHidden($("goal-settings"), true);
   try {
     if (!offlineUnavailable) await offline?.leave();
     else if (offline) offline.userID = 0;
@@ -795,6 +797,7 @@ async function submitLog(event) {
   try {
     // Persist the chosen date before attempting the network. A set retried
     // tomorrow still belongs to the day on which it was logged.
+    const goalWasReached = viewedGoals.get(`${state.username}:${state.selectedDay || state.today}`);
     const body = { type_id: state.selectedTypeId, count, day: state.selectedDay || state.today };
     const entry = offline?.userID && !offlineUnavailable
       ? await offline.enqueue(body, selectedType()?.name || "Push-ups")
@@ -816,6 +819,11 @@ async function submitLog(event) {
     dropStreamIfSignedOut(await Promise.allSettled([
       loadDay(entry.day), loadCalendar(), loadStats(), loadTypes(), loadFriends(),
     ]));
+    if (goalWasReached === false && viewedGoals.get(`${state.username}:${entry.day}`) === true) {
+      const panel = $("day-goal");
+      const rect = panel.getBoundingClientRect();
+      if (rect.bottom > window.innerHeight || rect.top < 0) panel.scrollIntoView({ behavior: reduceMotion.matches ? "instant" : "smooth", block: "center" });
+    }
     slam(entry.day);
     toast(`+${entry.count} ${entry.type_name}${entry.pending ? " · saved on this device" : ""}`);
     if (entry.pending) scheduleRefresh();
@@ -924,8 +932,147 @@ async function loadDay(day) {
     return li;
   }));
 
+  renderDayGoal(day, res.total, res.goal);
   markSelectedDay();
   renderSyncStatus().catch(() => {});
+}
+
+/* ---------------------------------------------------------- dated goals */
+
+function goalForDate(goals, day) {
+  return [...goals].reverse().find((goal) => goal.effective_day <= day) || null;
+}
+
+const viewedGoals = new Map();
+let goalSettingsDay = "";
+let goalSettingsGen = 0;
+
+function renderDayGoal(day, total, goal) {
+  const reached = Boolean(goal && day <= state.today && total >= goal.target);
+  const key = `${state.username}:${day}`;
+  const previous = viewedGoals.get(key);
+  viewedGoals.set(key, reached);
+  const panel = $("day-goal");
+  panel.classList.toggle("is-complete", reached);
+  setHidden($("goal-check"), !reached);
+  setText($("goal-heading"), reached ? "Daily goal reached" : goal ? "Your daily practice" : "No goal for this day");
+  setText($("goal-progress-text"), goal ? `${total.toLocaleString("en-US")} / ${goal.target.toLocaleString("en-US")} push-ups${reached ? ". Take a breath." : ` · ${Math.max(0, goal.target - total).toLocaleString("en-US")} to go`}` : "Set a daily goal in Settings. Earlier days keep their own history.");
+  setHidden($("goal-progress"), !goal);
+  if (goal) {
+    $("goal-progress").max = goal.target;
+    $("goal-progress").value = Math.min(total, goal.target);
+    setAttr($("goal-progress"), "aria-valuetext", `${total} of ${goal.target} push-ups`);
+  }
+  setText($("goal-since"), goal ? `Target set ${fmtDayShort(goal.effective_day)}, ${goal.effective_day.slice(0, 4)}` : "");
+  setHidden($("goal-reflection"), !reached);
+  if (reached) {
+    const quote = window.PushupQuotes.forDay(day, state.username);
+    setText($("goal-quote"), quote.text);
+    setText($("goal-author"), quote.author);
+    setHidden($("goal-source"), !quote.source_url);
+    if (quote.source_url) {
+      setText($("goal-source"), `Quotes via ${quote.source}`);
+      setAttr($("goal-source"), "href", quote.source_url);
+    }
+    // Refresh the pool for later days; never replace a reflection mid-read.
+    window.PushupQuotes.refresh(state.today, state.username, () => api("GET", "/api/quotes"));
+  }
+  if (reached && previous === false) {
+    setText($("goal-announcement"), `Daily goal reached. ${total} of ${goal.target} push-ups. ${$("goal-quote").textContent}`);
+    move($("goal-check"), [
+      { clipPath: "inset(0 100% 0 0)", transform: "scale(.85)" },
+      { clipPath: "inset(0 0 0 0)", transform: "scale(1)" },
+    ], 700);
+    move($("goal-reflection"), [
+      { opacity: .35, transform: "translateY(6px)" },
+      { opacity: 1, transform: "none" },
+    ], 700);
+  } else if (!reached) setText($("goal-announcement"), "");
+}
+
+function previewGoal() {
+  if (!goalSettingsDay) return;
+  const value = Number($("goal-target").value);
+  const target = Number.isInteger(value) && value > 0 && value <= 100000 ? `${value.toLocaleString("en-US")} push-ups` : "Your new target";
+  setText($("goal-preview-start"), `${target} per day, starting ${fmtDay(goalSettingsDay)}.`);
+}
+
+async function openGoalSettings() {
+  const gen = ++goalSettingsGen;
+  setHidden($("goal-settings"), !state.csrf);
+  if (!state.csrf) return;
+  goalSettingsDay = "";
+  $("goal-save").disabled = true;
+  $("goal-target").disabled = true;
+  showError($("goal-settings-error"), "");
+  setHidden($("goal-settings-status"), true);
+  setText($("goal-current"), "Loading your goal…");
+  setText($("goal-preview-start"), "");
+  try {
+    const data = await api("GET", "/api/goals");
+    if (gen !== goalSettingsGen || !state.csrf) return;
+    goalSettingsDay = data.today;
+    const goals = data.goals || [];
+    const current = goalForDate(goals, data.today);
+    setText($("goal-current"), current ? `Current goal: ${current.target.toLocaleString("en-US")} push-ups per day, since ${fmtDay(current.effective_day)}.` : "Choose a target for your daily practice. All variations count toward it.");
+    $("goal-target").value = current ? String(current.target) : "";
+    $("goal-history").replaceChildren(...goals.map((goal, i) => {
+      const li = document.createElement("li");
+      const next = goals[i + 1];
+      const end = next ? parseDay(next.effective_day) : null;
+      if (end) end.setDate(end.getDate() - 1);
+      const endDay = end ? dayKey(end.getFullYear(), end.getMonth() + 1, end.getDate()) : "";
+      li.textContent = `${goal.target.toLocaleString("en-US")} per day · ${fmtDayShort(goal.effective_day)}, ${goal.effective_day.slice(0, 4)}${next ? ` through ${fmtDayShort(endDay)}, ${endDay.slice(0, 4)}` : " onwards"}`;
+      return li;
+    }).reverse());
+    setHidden($("goal-history-details"), !goals.length);
+    $("goal-target").disabled = false;
+    $("goal-save").disabled = navigator.onLine === false;
+    if (navigator.onLine === false) showError($("goal-settings-error"), "Reconnect to save a goal. Your saved targets still apply offline.");
+    previewGoal();
+  } catch (err) {
+    setText($("goal-current"), "");
+    showError($("goal-settings-error"), err.message);
+  }
+}
+
+async function saveGoal(event) {
+  event.preventDefault();
+  const target = Number($("goal-target").value);
+  if (!goalSettingsDay || !Number.isInteger(target) || target < 1 || target > 100000) return;
+  $("goal-save").disabled = true;
+  committing = true;
+  if (refreshRun) await refreshRun;
+  showError($("goal-settings-error"), "");
+  try {
+    // A successful save must be reported even if the subsequent cache refresh fails.
+    const saved = await networkAPI("PUT", "/api/goals", { target, effective_day: goalSettingsDay });
+    let cacheWarning = "";
+    try {
+      if (offline?.userID && !offlineUnavailable) {
+        // Write through immediately so a failed refresh cannot show the old target.
+        const account = await offline.account();
+        if (account?.snapshot) {
+          account.snapshot.goals = [...(account.snapshot.goals || []).filter((g) => g.effective_day !== saved.effective_day), saved].sort((a, b) => a.effective_day.localeCompare(b.effective_day));
+          await offline.storage.put("accounts", offline.userID, account);
+        }
+      }
+    } catch {
+      cacheWarning = " Reconnect and reload to update this device’s offline copy.";
+      offlineUnavailable = "Your goal was saved, but offline storage could not be updated.";
+    }
+    await openGoalSettings();
+    setHidden($("goal-settings-status"), false);
+    setText($("goal-settings-status"), `Daily goal saved: ${saved.target} push-ups, starting ${fmtDay(saved.effective_day)}.${cacheWarning}`);
+    await Promise.allSettled([loadCalendar(), loadDay(state.selectedDay)]);
+    scheduleRefresh();
+  } catch (err) {
+    showError($("goal-settings-error"), err.message);
+  } finally {
+    $("goal-save").disabled = navigator.onLine === false;
+    committing = false;
+    drainPending();
+  }
 }
 
 /* ---------------------------------------------------------- calendar */
@@ -974,7 +1121,11 @@ function buildMonth(body, res) {
     val.className = "t tnum";
     val.setAttribute("aria-hidden", "true");
 
-    btn.append(num, val);
+    const check = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    check.setAttribute("class", "ico day-goal-check");
+    check.setAttribute("aria-hidden", "true");
+    check.innerHTML = '<use href="#i-check"></use>';
+    btn.append(num, val, check);
     btn.addEventListener("click", () => loadDay(key));
 
     td.append(btn);
@@ -1015,6 +1166,8 @@ async function loadCalendar() {
     buildMonth(body, res);
   }
 
+  let completed = 0;
+  let eligible = 0;
   for (const btn of body.querySelectorAll(".day")) {
     const key = btn.dataset.day;
     const total = totals.get(key) || 0;
@@ -1028,12 +1181,25 @@ async function loadCalendar() {
     setAttr(btn, "data-active", String(total > 0));
     const color = heatColor(total, peak);
     if (btn.style.getPropertyValue("--day-heat") !== color) btn.style.setProperty("--day-heat", color);
-    setAttr(btn, "aria-label", `${fmtDay(key)}: ${total} push-ups`);
+    const goal = goalForDate(res.goals || [], key);
+    const reached = Boolean(goal && key <= res.today && total >= goal.target);
+    if (goal && key <= res.today) eligible++;
+    if (reached) completed++;
+    const wasReached = btn.classList.contains("goal-reached");
+    btn.classList.toggle("goal-reached", reached);
+    if (!rebuilt && reached && !wasReached) move(btn.children[2], [
+      { clipPath: "inset(0 100% 0 0)", transform: "scale(.85)" },
+      { clipPath: "inset(0 0 0 0)", transform: "scale(1)" },
+    ], 700);
+    setAttr(btn, "aria-label", `${fmtDay(key)}: ${total} push-ups. ${goal ? (reached ? `Goal reached: ${goal.target}.` : `Goal: ${goal.target}.`) : "No daily goal set for this date."}`);
     // Today rolls over under a page that stays open all night.
     if (key === res.today) setAttr(btn, "aria-current", "date");
     else btn.removeAttribute("aria-current");
   }
 
+  setText($("cal-goals-summary"), eligible ? `${completed} of ${eligible} goal days completed so far this month. Each day uses its own target.` : "No goal days in this month yet. Goals begin on the day you set them.");
+  const currentGoal = goalForDate(res.goals || [], res.today);
+  setText(document.querySelector("[data-open-goals]"), currentGoal ? `Daily goal: ${currentGoal.target}` : "Set daily goal");
   markSelectedDay();
   if (rebuilt && !previousShape) {
     // The opening scoreboard settles row by row, once. Background refreshes
@@ -1733,6 +1899,8 @@ function wire() {
       if (await offline.active() !== offline.userID) {
         disconnectEvents();
         window.AppAccount?.leave();
+        goalSettingsGen++;
+        setHidden($("goal-settings"), true);
         offline.userID = 0;
         state.csrf = "";
         state.username = "";
@@ -1747,8 +1915,13 @@ function wire() {
   const themeToggle = $("classic-theme");
   themeToggle.checked = document.documentElement.dataset.theme === "classic";
   for (const button of document.querySelectorAll("[data-open-settings]")) {
-    button.addEventListener("click", () => settings.showModal());
+    button.addEventListener("click", () => { openGoalSettings(); settings.showModal(); });
   }
+  for (const button of document.querySelectorAll("[data-open-goals]")) {
+    button.addEventListener("click", () => { openGoalSettings(); settings.showModal(); $("goal-settings").scrollIntoView({ block: "start" }); $("goal-target").focus({ preventScroll: true }); });
+  }
+  $("goal-target").addEventListener("input", previewGoal);
+  $("goal-form").addEventListener("submit", saveGoal);
   $("settings-close").addEventListener("click", () => settings.close());
   themeToggle.addEventListener("change", () => {
     const saved = window.PushupTheme.set(themeToggle.checked ? "classic" : "plant");
@@ -1806,6 +1979,10 @@ function wire() {
   window.addEventListener("focus", resumeApp);
   window.addEventListener("pageshow", resumeApp);
   window.addEventListener("online", resumeApp);
+  window.addEventListener("offline", () => {
+    if (offline) offline.online = false;
+    renderSyncStatus().catch(() => {});
+  });
 
   $("fab").addEventListener("click", openSheet);
   $("log-close").addEventListener("click", () => closeSheet());
@@ -1929,13 +2106,15 @@ async function boot() {
     state.today = res.today;
     if (res.authenticated) {
       // Restoring offline data must not reset the saved server clock.
-      if (res.offline) {
+      if (res.cached) {
         state.csrf = res.csrf_token;
         state.username = res.username;
       } else await adoptSession(res);
       await enterApp();
     } else {
       window.AppAccount?.leave();
+      goalSettingsGen++;
+      setHidden($("goal-settings"), true);
       $("gate").hidden = false;
       setAuthMode("login");
     }
@@ -1959,19 +2138,24 @@ async function renderSyncStatus() {
     region = document.createElement("section");
     region.id = "sync-status";
     region.className = "sync-status";
+    region.hidden = true;
     region.setAttribute("aria-label", "Offline logging and sync");
     app.prepend(region);
   }
   const pending = offline?.userID && !offlineUnavailable ? await offline.pending() : [];
   if (generation !== syncStatusGeneration) return;
-  region.hidden = !offlineUnavailable && (!offline?.userID || (offline.online && !pending.length && !offline.needsAuth));
+  region.hidden = !offlineUnavailable && (!offline?.userID || (offline.online !== false && !pending.length && !offline.needsAuth));
   if (region.hidden) return;
   const text = document.createElement("p");
   text.setAttribute("role", "status");
   const count = `${pending.length} saved set${pending.length === 1 ? "" : "s"}`;
   text.textContent = offlineUnavailable || (offline.needsAuth
     ? `${offline.problem} ${count} stay on this device.`
-    : `${offline.online ? "" : "Offline. "}${pending.length ? `${count} ${offline.syncing ? "syncing" : "waiting to sync"}. ` : "Your saved log is available. "}Reconnect to sync. Variations, crew and deleting entries need a connection.`);
+    : offline.online === false
+      ? `Offline. ${pending.length ? `${count} waiting to sync. ` : "Your saved log is available. "}Reconnect to sync. Variations, crew and deleting entries need a connection.`
+      : offline.online === null
+        ? `Checking connection. ${count} stay saved on this device.`
+        : `${count} ${offline.syncing ? "syncing" : "waiting to sync"}. ${pending.some((entry) => entry.error) ? "Some sets need attention below." : "Your log is saved on this device."}`);
   const children = [text];
   if (!offlineUnavailable) {
     const retry = document.createElement("button");
@@ -1983,6 +2167,8 @@ async function renderSyncStatus() {
       if (offline.needsAuth) {
         disconnectEvents();
         window.AppAccount?.leave();
+        goalSettingsGen++;
+        setHidden($("goal-settings"), true);
         $("app").hidden = true;
         $("gate").hidden = false;
         $("auth-user").value = state.username;

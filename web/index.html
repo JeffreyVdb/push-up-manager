@@ -195,6 +195,11 @@
         </div>
       </div>
 
+      <div class="goal-calendar-key">
+        <span><svg class="ico" aria-hidden="true"><use href="#i-check"></use></svg> Goal reached</span>
+        <button class="btn btn-ghost btn-sm" type="button" data-open-goals>Set daily goal</button>
+      </div>
+
       <div class="calendar-viewport">
       <table class="cal" id="cal">
         <caption class="sr-only">Push-ups logged per day</caption>
@@ -213,6 +218,7 @@
       </table>
       </div>
 
+      <p id="cal-goals-summary" class="hint"></p>
       <p class="legend">
         <span>Cold</span>
         <span class="heat-scale" aria-hidden="true"></span>
@@ -229,6 +235,17 @@
         </button>
       </div>
       <p class="daylabel"><strong id="day-label"></strong><span id="day-total" class="daytotal tnum">&middot;</span></p>
+      <section id="day-goal" class="day-goal" aria-label="Daily goal">
+        <div class="goal-heading"><span id="goal-check" class="goal-check" aria-hidden="true" hidden><svg class="ico"><use href="#i-check"></use></svg></span><strong id="goal-heading"></strong></div>
+        <p id="goal-progress-text" class="hint"></p>
+        <progress id="goal-progress" aria-label="Daily goal progress" max="100" value="0" hidden></progress>
+        <p id="goal-since" class="hint"></p>
+        <figure id="goal-reflection" hidden>
+          <blockquote id="goal-quote"></blockquote>
+          <figcaption><span id="goal-author"></span><a id="goal-source" target="_blank" rel="noopener noreferrer" hidden></a></figcaption>
+        </figure>
+      </section>
+      <p id="goal-announcement" class="sr-only" role="status"></p>
       <ul id="day-entries" class="entries"></ul>
       <p id="day-empty" class="empty" hidden>NOTHING LOGGED. FIX IT.</p>
     </section>
@@ -366,6 +383,20 @@
   </label>
   <p id="theme-note" class="hint">Off for the plant-based theme. Saved on this browser.</p>
   <p id="theme-status" class="hint" role="status" hidden></p>
+  <section id="goal-settings" class="account-section" aria-labelledby="goal-settings-title" hidden>
+    <h3 id="goal-settings-title" class="band-title">Daily goal</h3>
+    <p id="goal-current" class="hint"></p>
+    <form id="goal-form" class="stack">
+      <label class="field"><span class="field-label">Push-ups per day</span>
+        <input id="goal-target" type="number" inputmode="numeric" min="1" max="100000" step="1" placeholder="100" required aria-describedby="goal-preview">
+      </label>
+      <div id="goal-preview" class="goal-preview"><strong id="goal-preview-start"></strong><p>This target applies from that date until you change it. Earlier days keep their previous targets; days before your first goal stay unmarked. Saving again today replaces today's target, including for sets already logged today.</p></div>
+      <button id="goal-save" class="btn btn-primary" type="submit">Save daily goal</button>
+    </form>
+    <p id="goal-settings-status" class="hint" role="status" hidden></p>
+    <p id="goal-settings-error" class="alert" role="alert" hidden></p>
+    <details id="goal-history-details" hidden><summary>Goal history</summary><ul id="goal-history" class="goal-history"></ul></details>
+  </section>
   <div id="account-settings" hidden>
     <section class="account-section" aria-labelledby="account-email-title">
       <h3 id="account-email-title" class="band-title">Recovery email</h3>
@@ -393,6 +424,7 @@
   </div>
 </dialog>
 
+<script src="/quotes.js?v=__BUILD__" defer></script>
 <script src="/offline.js?v=__BUILD__" defer></script>
 <script src="/account.js?v=__BUILD__" defer></script>
 <script src="/passkeys.js?v=__BUILD__" defer></script>

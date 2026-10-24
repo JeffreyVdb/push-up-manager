@@ -106,8 +106,10 @@
       this.userID = id;
       const account = await this.account();
       if (!account?.snapshot) return null;
-      this.online = false;
-      const session = this.localSession(account);
+      // Restoring data says nothing about reachability. Only a browser offline
+      // signal or a failed request establishes that; null means not checked.
+      this.online = root.navigator?.onLine === false ? false : null;
+      const session = { ...this.localSession(account), cached: true };
       this.sessionChanged(session);
       return session;
     }
@@ -126,7 +128,7 @@
       const elapsed = Math.max(0, Date.now() - account.clock);
       const rollover = session.day_rollover_ms || 86400000;
       if (elapsed >= rollover) session.today = addDays(session.today, 1 + Math.floor((elapsed - rollover) / 86400000));
-      session.offline = !this.online;
+      session.offline = this.online === false;
       return session;
     }
     async session() {
@@ -229,11 +231,12 @@
       const sum = (rows) => rows.reduce((n, e) => n + e.count, 0);
       const totals = new Map();
       for (const entry of entries) totals.set(entry.day, (totals.get(entry.day) || 0) + entry.count);
+      if (path === "/api/goals") return { goals: snapshot.goals || [], today };
       if (path === "/api/types") return { types: snapshot.types.map((t) => ({ ...t, total: sum(entries.filter((e) => e.type_id === t.id)) })), last_used_type_id: entries[0]?.type_id || 0 };
       if (path.startsWith("/api/day/")) {
         const day = path.slice(9);
         const rows = entries.filter((e) => e.day === day);
-        return { day, entries: rows, total: sum(rows) };
+        return { day, entries: rows, total: sum(rows), goal: [...(snapshot.goals || [])].reverse().find((g) => g.effective_day <= day) || null };
       }
       if (path.startsWith("/api/calendar?")) {
         const params = new URLSearchParams(path.split("?")[1]);
@@ -241,7 +244,7 @@
         const month = Number(params.get("month"));
         const prefix = `${year}-${String(month).padStart(2, "0")}`;
         const rows = [...totals].filter(([day]) => day.startsWith(prefix)).map(([day, total]) => ({ day, total }));
-        return { year, month, today, days: new Date(Date.UTC(year, month, 0)).getUTCDate(), lead_blank: (new Date(Date.UTC(year, month - 1, 1)).getUTCDay() + 6) % 7, totals: rows, month_total: rows.reduce((n, r) => n + r.total, 0) };
+        return { year, month, today, goals: snapshot.goals || [], days: new Date(Date.UTC(year, month, 0)).getUTCDate(), lead_blank: (new Date(Date.UTC(year, month - 1, 1)).getUTCDay() + 6) % 7, totals: rows, month_total: rows.reduce((n, r) => n + r.total, 0) };
       }
       if (path === "/api/overview") {
         let cursor = totals.has(today) ? today : addDays(today, -1);
