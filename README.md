@@ -22,7 +22,9 @@ pushup-counter: ELF 64-bit LSB executable, x86-64, statically linked, stripped
 - Month calendar with a per-day heat map: every day shows its total, and the
   colour is never the only channel. The default plant theme uses a continuous
   green ramp; Classic keeps the original cool-to-hot ramp. Logged days retain
-  a dark foreground, and an outer border marks today.
+  a dark foreground, and an outer border marks today. Swipe right for the previous
+  month or left for the next; the grid follows your finger and settles smoothly.
+  Vertical scrolling, date taps, arrow buttons and reduced motion remain supported.
 - Dated daily goals: a goal starts on the day it is saved. Earlier dates keep
   their previous target; days before the first goal stay unmarked. Completed
   calendar days show a check, and reaching a goal reveals a calm daily reflection.
@@ -294,6 +296,12 @@ and sets. Optional environment variables: `PUSHUP_TEST_URL`, `PLAYWRIGHT_MODULE`
 and checks date-aware completion, goal previews and replacement, offline
 reload/sync, deletion, quote persistence, both themes and reduced motion. It
 accepts the same Playwright and screenshot environment variables.
+
+`tests/browser-calendar.cjs` checks real touch swipes, drag direction, year
+boundaries, short drags, flicks, cancellation, native vertical scrolling, day taps,
+keyboard navigation, rapid input, offline reload, failed requests, both themes
+and reduced motion (default port `5577`). It accepts the same Playwright and
+screenshot environment variables.
 
 `tests/browser-connectivity.cjs` watches the startup DOM for even transient
 false offline messages during a successful desktop refresh, and confirms that

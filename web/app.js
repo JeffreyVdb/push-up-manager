@@ -1077,6 +1077,112 @@ async function saveGoal(event) {
 
 /* ---------------------------------------------------------- calendar */
 
+let calendarSwipe = null;
+
+function setupCalendarSwipe() {
+  const grid = $("cal");
+  const viewport = grid.parentElement;
+  let gesture = null;
+  let offset = 0;
+  let suppressClick = false;
+  let pending = false;
+
+  const reset = () => {
+    const previous = offset;
+    offset = 0;
+    gesture = null;
+    grid.style.transform = "";
+    return previous;
+  };
+  const settle = () => {
+    const previous = reset();
+    if (previous) move(grid, [
+      { transform: `translateX(${previous}px)` }, { transform: "none" },
+    ], 240);
+  };
+
+  viewport.addEventListener("pointerdown", (event) => {
+    if (!event.isPrimary) { settle(); return; }
+    if (event.button !== 0 || pending) return;
+    suppressClick = false;
+    // A new gesture can interrupt a settling month without a visual jump.
+    const transform = getComputedStyle(grid).transform;
+    const startOffset = transform === "none" ? 0 : new DOMMatrixReadOnly(transform).m41;
+    motions.get(grid)?.cancel();
+    motions.delete(grid);
+    viewport.querySelector(".calendar-departing")?.remove();
+    offset = startOffset;
+    grid.style.transform = `translateX(${offset}px)`;
+    gesture = { id: event.pointerId, x: event.clientX, y: event.clientY,
+      startOffset, width: grid.offsetWidth, time: event.timeStamp, axis: null };
+  });
+  viewport.addEventListener("pointermove", (event) => {
+    if (!gesture || event.pointerId !== gesture.id) return;
+    const dx = event.clientX - gesture.x;
+    const dy = event.clientY - gesture.y;
+    if (!gesture.axis) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 8) return;
+      if (Math.abs(dy) >= Math.abs(dx)) { settle(); return; }
+      gesture.axis = "x";
+      suppressClick = true;
+      viewport.setPointerCapture(event.pointerId);
+    }
+    // Keep the page's vertical scroll and pinch zoom native. Only a clearly
+    // horizontal gesture belongs to the calendar.
+    offset = reduceMotion.matches ? 0 : Math.max(-gesture.width, Math.min(gesture.width, gesture.startOffset + dx));
+    grid.style.transform = `translateX(${offset}px)`;
+  });
+  viewport.addEventListener("pointerup", (event) => {
+    if (!gesture || event.pointerId !== gesture.id) return;
+    const dx = event.clientX - gesture.x;
+    const elapsed = event.timeStamp - gesture.time;
+    const commit = gesture.axis === "x" && (Math.abs(dx) >= gesture.width * .22 ||
+      (Math.abs(dx) >= 32 && elapsed < 250));
+    gesture = null;
+    if (viewport.hasPointerCapture(event.pointerId)) viewport.releasePointerCapture(event.pointerId);
+    if (!commit) { settle(); return; }
+    pending = true;
+    shiftMonth(dx > 0 ? -1 : 1).finally(() => { pending = false; settle(); });
+  });
+  viewport.addEventListener("pointercancel", settle);
+  viewport.addEventListener("lostpointercapture", (event) => {
+    // Touch starts with implicit capture on the day button. Its bubbling loss
+    // is expected when the viewport takes over the horizontal gesture.
+    if (event.target === viewport && gesture) settle();
+  });
+  viewport.addEventListener("click", (event) => {
+    // Swiping across a date must not select it. Keyboard activation and the
+    // next genuine tap remain available, even after a cancelled gesture.
+    if (suppressClick && event.detail !== 0) {
+      event.preventDefault();
+      event.stopPropagation();
+      suppressClick = false;
+    }
+  }, true);
+  reduceMotion.addEventListener("change", settle);
+  return { reset };
+}
+
+function captureCalendarDeparture() {
+  const grid = $("cal");
+  const viewport = grid.parentElement;
+  const offset = calendarSwipe?.reset() || 0;
+  viewport.querySelector(".calendar-departing")?.remove();
+  if (reduceMotion.matches || document.hidden) return null;
+  const copy = grid.cloneNode(true);
+  copy.removeAttribute("id");
+  copy.querySelectorAll("[id]").forEach((el) => el.removeAttribute("id"));
+  copy.classList.add("calendar-departing");
+  copy.inert = true;
+  copy.setAttribute("aria-hidden", "true");
+  copy.style.width = `${grid.offsetWidth}px`;
+  copy.style.margin = "0";
+  copy.style.top = `${grid.offsetTop}px`;
+  copy.style.left = `${grid.offsetLeft}px`;
+  viewport.append(copy);
+  return { copy, offset, width: grid.offsetWidth };
+}
+
 function heatColor(total, peak) {
   if (total <= 0) return "var(--heat-0)";
   const ratio = Math.min(1, total / Math.max(1, peak));
@@ -1161,6 +1267,7 @@ async function loadCalendar() {
   const shape = `${res.year}-${res.month}`;
   const previousShape = body.dataset.shape;
   const rebuilt = body.dataset.shape !== shape;
+  const departure = rebuilt && previousShape ? captureCalendarDeparture() : null;
   if (rebuilt) {
     body.dataset.shape = shape;
     buildMonth(body, res);
@@ -1211,10 +1318,20 @@ async function loadCalendar() {
   } else if (rebuilt) {
     const [year, month] = previousShape.split("-").map(Number);
     const direction = res.year * 12 + res.month > year * 12 + month ? 1 : -1;
-    move($("cal"), [
-      { transform: `translateX(${direction * 64}px)`, opacity: .15 },
-      { transform: "none", opacity: 1 },
-    ], 480);
+    if (departure) {
+      const { copy, offset, width } = departure;
+      move(copy, [
+        { transform: `translateX(${offset}px)` },
+        { transform: `translateX(${-direction * width}px)` },
+      ], 340);
+      const animation = motions.get(copy);
+      if (animation) animation.finished.then(() => copy.remove(), () => copy.remove());
+      else copy.remove();
+      move($("cal"), [
+        { transform: `translateX(${direction * width + offset}px)` },
+        { transform: "none" },
+      ], 340);
+    }
     move($("cal-label"), [
       { transform: `translateX(${direction * 10}px)`, opacity: .5 },
       { transform: "none", opacity: 1 },
@@ -1232,13 +1349,19 @@ function markSelectedDay() {
   if (cell && !cell.classList.contains("is-sel")) cell.classList.add("is-sel");
 }
 
-function shiftMonth(delta) {
+async function shiftMonth(delta) {
+  const previous = state.cal;
   let { year, month } = state.cal;
   month += delta;
   if (month < 1) { month = 12; year--; }
   if (month > 12) { month = 1; year++; }
   state.cal = { year, month };
-  loadCalendar().catch((err) => toast(err.message));
+  const requested = state.cal;
+  try { await loadCalendar(); }
+  catch (err) {
+    if (state.cal === requested) state.cal = previous;
+    toast(err.message);
+  }
 }
 
 /* ---------------------------------------------------------- stats */
@@ -1951,6 +2074,7 @@ function wire() {
   $("log").addEventListener("submit", submitLog);
   $("cal-prev").addEventListener("click", () => shiftMonth(-1));
   $("cal-next").addEventListener("click", () => shiftMonth(1));
+  calendarSwipe = setupCalendarSwipe();
   $("day-today").addEventListener("click", () => loadDay(state.today).catch((e) => toast(e.message)));
 
   wireTablist(".vtab", (tab) => setView(tab.dataset.view));

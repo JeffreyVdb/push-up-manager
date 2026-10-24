@@ -394,7 +394,16 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
 /* ---- calendar ---- */
 /* The grid is the one block that needs every pixel of width to keep a 48px
    cell on a narrow phone, so it bleeds into the sheet's gutter. */
-.calendar-viewport { overflow: hidden; padding: 4px; margin: -4px; }
+.calendar-viewport {
+  position: relative;
+  overflow: hidden;
+  padding: 4px;
+  margin: -4px;
+  touch-action: pan-y pinch-zoom;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.calendar-departing { position: absolute; pointer-events: none; }
 .cal {
   width: calc(100% + 1rem);
   margin-inline: -.5rem;

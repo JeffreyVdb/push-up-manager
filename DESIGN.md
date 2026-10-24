@@ -213,7 +213,7 @@ Settings shares the phone breakpoint in both themes: below 48rem it fills the vi
 
 Most hierarchy comes from tonal panels, spacing and thin rules. The calendar and selected day are flat; shadows identify controls that float above content. The dock uses `--shadow-lift` (0 -12px 36px -20px rgb(32 61 46 / .22)); the mobile action uses a downward shadow (0 8px 24px -8px rgb(32 61 46 / .35)). Settings uses a native dialog and a dark translucent backdrop (rgb(7 24 17 / .6)). Classic retains its original darker dock shadow.
 
-Shared motion keeps the existing mechanical scoreboard grammar: changed numbers land over 420ms; calendar and month navigation communicate direction over 480ms/340ms; tab rails travel over 340ms; sheets slide over 340ms. Plant changes the logged-day pulse to a small leaf-settle scale from .94 to 1. Motion uses `cubic-bezier(.16, 1, .3, 1)`, is cancellable and does not queue behind input. Unchanged refreshes do not animate. Reduced-motion preferences disable or cancel animation while data and focus update immediately.
+Shared motion keeps the existing mechanical scoreboard grammar: changed numbers land over 420ms; calendar and month navigation communicate direction over 340ms; tab rails travel over 340ms; sheets slide over 340ms. Plant changes the logged-day pulse to a small leaf-settle scale from .94 to 1. Motion uses `cubic-bezier(.16, 1, .3, 1)`, is cancellable and does not queue behind input. Unchanged refreshes do not animate. Reduced-motion preferences disable or cancel animation while data and focus update immediately.
 
 ## Shapes
 
@@ -232,6 +232,8 @@ The `LOG` / `CREW`, account and leaderboard period tabs retain their ARIA tab be
 ### Calendar, statistics and selected day
 
 The calendar is a Monday-first table inside the paper panel. Each day carries a visible date, total and full accessible name. Today has `aria-current="date"` and an outer signal outline separated from the fill; historical selection uses an inset border. The month total and month navigation keep their existing meanings and announcements. Preserve the four-column statistics row and its thin dividers; figures remain distinct from the calendar's month total.
+
+The calendar follows horizontal touch, pen and mouse drags: right reveals the previous month, left reveals the next. A deliberate drag or short quick flick commits; short drags settle back over 240ms. Outgoing and incoming months slide together over 340ms, while arrow controls and keyboard activation remain available. Vertical scrolling and pinch zoom remain native, and swiping never selects a date. Reduced motion retains swipe navigation without spatial movement.
 
 The lavender selected-day panel holds its date, total and entry rows. Variations sit below it without another enclosing panel. Inline removal controls and empty states keep the original direct wording.
 
