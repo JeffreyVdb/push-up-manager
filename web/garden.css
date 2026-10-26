@@ -99,11 +99,13 @@
   --day-rule: #cfc5d6;
   --day-muted: #62546a;
   --heat-0: #f0f3e9;
-  --heat-1: #e1ebcf;
-  --heat-2: #c4db9d;
-  --heat-3: #a0c479;
-  --heat-4: #80ae5f;
-  --heat-ink: #20351d;
+  --heat-1: #e5edcb;
+  --heat-2: #c3dc9b;
+  --heat-3: #93c26c;
+  --heat-4: #539344;
+  --heat-ink: #0a160b;
+  --heat-wash: rgb(32 61 46 / .22);
+  --heat-lift: rgb(32 61 46 / .45);
   --display: "Fraunces", Georgia, serif;
   --petal: #ece7f1;
   --plum: #665270;
@@ -227,6 +229,24 @@
 :where([data-theme="plant"]) .day.pulse { animation-name: leaf-settle; }
 :where([data-theme="plant"]) .goal-fill-key { border-radius: 4px; }
 @keyframes leaf-settle { from { transform: scale(.94); } to { transform: scale(1); } }
+/* A set lands and the day takes it in: a quick lift off the paper and a slow
+   settle, while a band of water crosses the heat fill from the ground up.
+   The fill's own clip keeps the water below the level. Light mode darkens
+   like wet soil; dark mode brightens like light through a leaf. */
+:where([data-theme="plant"]) .day.land { animation-name: leaf-breath; animation-duration: .56s; }
+@keyframes leaf-breath {
+  0%   { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+  35%  { transform: scale(1.06); box-shadow: 0 8px 18px -8px var(--heat-lift); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+}
+:where([data-theme="plant"]) .day.land .day-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, transparent, var(--heat-wash) 50%, transparent);
+  animation: soak .64s ease-in-out;
+}
+@keyframes soak { from { transform: translateY(100%); } to { transform: translateY(-100%); } }
 :where([data-theme="plant"]) .legend { text-transform: none; letter-spacing: 0; font-size: .6875rem; justify-content: flex-end; gap: .5rem; }
 :where([data-theme="plant"]) .heat-scale { height: 8px; border-radius: 4px; }
 

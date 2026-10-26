@@ -13,11 +13,12 @@ colors:
   leaf-bar: "#648052"
   rust-warning: "#9a3f24"
   heat-empty: "#f0f3e9"
-  heat-shoot: "#e1ebcf"
-  heat-sprout: "#c4db9d"
-  heat-leaf: "#a0c479"
-  heat-full: "#80ae5f"
-  heat-text: "#20351d"
+  heat-shoot: "#e5edcb"
+  heat-sprout: "#c3dc9b"
+  heat-leaf: "#93c26c"
+  heat-full: "#539344"
+  heat-text: "#0a160b"
+  heat-wash: "rgb(32 61 46 / .22)"
   lavender: "#ece7f1"
   plum: "#665270"
   day-rule: "#cfc5d6"
@@ -55,11 +56,12 @@ colors:
   plant-dark-on-signal: "#172711"
   plant-dark-on-signal-pressed: "#172711"
   plant-dark-heat-0: "#233026"
-  plant-dark-heat-1: "#8cae79"
-  plant-dark-heat-2: "#9cbf80"
-  plant-dark-heat-3: "#b6cf90"
-  plant-dark-heat-4: "#c7dfa2"
-  plant-dark-heat-ink: "#172711"
+  plant-dark-heat-1: "#6d935b"
+  plant-dark-heat-2: "#90b16d"
+  plant-dark-heat-3: "#b9d386"
+  plant-dark-heat-4: "#e2f1ac"
+  plant-dark-heat-ink: "#0d1a0a"
+  plant-dark-heat-wash: "rgb(226 241 172 / .4)"
   plant-dark-petal: "#29232f"
   plant-dark-plum: "#d5c2df"
   plant-dark-day-rule: "#534759"
@@ -210,7 +212,7 @@ ROOTED light pairs pale botanical grounds with dark green text; ROOTED dark uses
 
 - **Forest** (`--signal`) identifies primary actions, focus, current-day outline and active rails. **Deep forest** (`--signal-deep`) handles hover and pressed actions in light mode; the dark variant brightens this role.
 - **Leaf bar** (`--signal-mid`) fills non-leader bars; the leader uses forest. Keep the visible track and printed totals.
-- The calendar ramps from **shoot** through **sprout** and **leaf** to **full leaf** (`--heat-1` through `--heat-4`). Positive totals interpolate continuously in sRGB relative to the month's peak, with stops at 0%, 40%, 70% and 100%. Every logged cell uses **heat text**; empty days use **heat empty** and muted text. Numeric totals and accessible names remain authoritative.
+- The calendar ramps from **shoot** through **sprout** and **leaf** to **full leaf** (`--heat-1` through `--heat-4`). A total's position on the ramp is the square root of its share of the month's peak, so a tenth of the peak sits about a third of the way up and ten reps read apart from a hundred; positive totals interpolate continuously in sRGB between stops at 0%, 40%, 70% and 100% of that position. The ramp spans pale shoot to a deep leaf in light mode and dim moss to pale leaf in dark mode; **heat text** is a near-black green that holds 4.5:1 on every stop. Empty days use **heat empty** and muted text. Numeric totals and accessible names remain authoritative.
 
 ### Secondary
 
@@ -260,7 +262,9 @@ Settings shares the phone breakpoint in both themes: below 48rem it fills the vi
 
 Most hierarchy comes from tonal panels, spacing and thin rules. The calendar and selected day are flat; shadows identify controls that float above content. The dock uses `--shadow-lift` (0 -12px 36px -20px rgb(32 61 46 / .22)); the mobile action uses a downward shadow (0 8px 24px -8px rgb(32 61 46 / .35)). Settings uses a native dialog and a dark translucent backdrop (rgb(7 24 17 / .6)). Classic dark retains its original darker dock shadow. Mode overrides supply a black dock shadow in ROOTED dark and a softer dark-green shadow in Classic light. Logging and destructive sheets share the mode-aware dock shadow and `--sheet-backdrop`.
 
-Shared motion keeps the existing mechanical scoreboard grammar: changed numbers land over 420ms; calendar and month navigation communicate direction over 340ms; tab rails travel over 340ms; sheets slide over 340ms. Plant changes the logged-day pulse to a small leaf-settle scale from .94 to 1. Motion uses `cubic-bezier(.16, 1, .3, 1)`, is cancellable and does not queue behind input. Unchanged refreshes do not animate. Reduced-motion preferences disable or cancel animation while data and focus update immediately.
+Shared motion keeps the existing mechanical scoreboard grammar: changed numbers land over 420ms; calendar and month navigation communicate direction over 340ms; tab rails travel over 340ms; sheets slide over 340ms.
+
+**The set lands.** A committed set has one authored moment on its calendar day, in addition to the selected-day total's slam. Classic stamps the cell: scale 1.1 to 1 with the scoreboard flash over 460ms. Plant lets the day breathe: a quick lift to 1.06 under a soft forest shadow (`--heat-lift`) that settles over 560ms, while a band of **heat wash** crosses the heat fill from the ground up over 600ms, clipped to the fill level, darkening like wet soil in light mode and brightening in dark mode. In both themes the cell's total drops in through the shared 420ms number motion, as does its ink copy inside the fill. Background refreshes keep the quieter pulse for someone else's set: a brightness flash in Classic, a leaf-settle from .94 to 1 in Plant. The two never stack. Motion uses `cubic-bezier(.16, 1, .3, 1)`, is cancellable and does not queue behind input. Unchanged refreshes do not animate. Reduced-motion preferences disable or cancel animation while data and focus update immediately.
 
 ## Shapes
 

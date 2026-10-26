@@ -129,16 +129,18 @@ function move(el, frames, duration = 380, delay = 0) {
   }, { once: true });
 }
 
+// How a changed number arrives: it drops into place and comes into focus.
+const NUMBER_LANDING = [
+  { transform: "translateY(-.18em) scaleY(1.12)", filter: "blur(1px)", opacity: .45 },
+  { transform: "none", filter: "blur(0)", opacity: 1 },
+];
 function setNumber(el, value) {
   const next = String(value);
   const previous = el.textContent;
   if (previous === next) return;
   setText(el, next);
   if (!/^[\d,]+$/.test(previous)) return;
-  move(el, [
-    { transform: "translateY(-.18em) scaleY(1.12)", filter: "blur(1px)", opacity: .45 },
-    { transform: "none", filter: "blur(0)", opacity: 1 },
-  ], 420);
+  move(el, NUMBER_LANDING, 420);
 }
 
 function moveTabRail(tab) {
@@ -815,7 +817,8 @@ async function submitLog(event) {
   }
 }
 
-// The one authored moment: the committed total lands.
+// The one authored moment: the committed total lands, and the day it landed
+// on takes it in.
 function slam(day) {
   const total = $("day-total");
   total.classList.remove("slam");
@@ -823,7 +826,26 @@ function slam(day) {
   total.classList.add("slam");
 
   const cell = document.querySelector(`.day[data-day="${day}"]`);
-  if (cell) pulseDay(cell);
+  if (cell) landDay(cell);
+}
+
+// The committed day's cell. The stylesheet lifts it — a stamp in Classic, a
+// breath and a wash of water in Plant — and its total drops in through the
+// same motion as every other changed number. Restarted rather than queued,
+// and a refresh's quieter pulse is dropped so the two never stack. The class
+// comes off when the cell's own animation ends (the fill's wash ends on the
+// fill, not here) so the raised stacking does not outlive the moment.
+function landDay(cell) {
+  cell.classList.remove("pulse", "land");
+  void cell.offsetWidth;
+  cell.classList.add("land");
+  cell.addEventListener("animationend", function done(event) {
+    if (event.target !== cell) return;
+    cell.classList.remove("land");
+    cell.removeEventListener("animationend", done);
+  });
+  // The visible total and its ink copy inside the fill move as one.
+  for (const el of [cell.children[1], cell.children[3].children[1]]) move(el, NUMBER_LANDING, 420, 60);
 }
 
 // One heat pulse on a day cell, restarted rather than queued. The stylesheet's
@@ -1170,7 +1192,10 @@ function captureCalendarDeparture() {
 
 function heatColor(total, peak) {
   if (total <= 0) return "var(--heat-0)";
-  const ratio = Math.min(1, total / Math.max(1, peak));
+  // Most days sit far below the month's peak, so a square root spreads the
+  // low end of the ramp: a tenth of the peak lands a third of the way up it,
+  // and ten reps no longer look like a hundred. The top keeps its order.
+  const ratio = Math.sqrt(Math.min(1, total / Math.max(1, peak)));
   // Continuous interpolation keeps neighbouring totals distinct. All four
   // stops have enough luminance for the same ink foreground throughout.
   const stops = [0, 0.4, 0.7, 1];
