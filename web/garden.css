@@ -219,11 +219,13 @@
 :where([data-theme="plant"]) .cal { width: 100%; margin: 0; border-collapse: separate; border-spacing: 4px; }
 :where([data-theme="plant"]) .cal th { font-size: .6875rem; font-weight: 500; letter-spacing: 0; }
 :where([data-theme="plant"]) .cal td { padding: 0; }
-:where([data-theme="plant"]) .day { border-radius: 10px; min-height: 56px; max-height: 78px; }
-:where([data-theme="plant"]) .day .d { font-size: .6875rem; font-weight: 400; }
+:where([data-theme="plant"]) .day { border-radius: 10px; min-height: 56px; max-height: 78px; padding-top: 7px; }
+:where([data-theme="plant"]) .day .d { margin-left: 9px; font-size: .6875rem; font-weight: 400; }
+:where([data-theme="plant"]) .day-goal-check { top: 6px; right: 8px; }
 :where([data-theme="plant"]) .day .t { font-family: var(--text); font-size: 1.0625rem; font-weight: 600; }
 :where([data-theme="plant"]) .day[aria-current="date"] { outline-color: var(--signal); outline-offset: 1px; }
 :where([data-theme="plant"]) .day.pulse { animation-name: leaf-settle; }
+:where([data-theme="plant"]) .goal-fill-key { border-radius: 4px; }
 @keyframes leaf-settle { from { transform: scale(.94); } to { transform: scale(1); } }
 :where([data-theme="plant"]) .legend { text-transform: none; letter-spacing: 0; font-size: .6875rem; justify-content: flex-end; gap: .5rem; }
 :where([data-theme="plant"]) .heat-scale { height: 8px; border-radius: 4px; }
@@ -331,9 +333,10 @@
   :where([data-theme="plant"]) .garden-calendar-title { font-size: 1.5rem; margin: 0 .5rem .75rem; }
   :where([data-theme="plant"]) .calendar-band .band-head { padding-inline: .5rem; gap: 0; }
   :where([data-theme="plant"]) .cal { border-spacing: 3px; }
-  :where([data-theme="plant"]) .day { min-height: 48px; border-radius: 7px; }
+  :where([data-theme="plant"]) .day { min-height: 48px; border-radius: 7px; padding-top: 5px; }
   :where([data-theme="plant"]) .day .t { font-size: .875rem; }
-  :where([data-theme="plant"]) .day .d { font-size: .625rem; }
+  :where([data-theme="plant"]) .day .d { margin-left: 6px; font-size: .625rem; }
+  :where([data-theme="plant"]) .day-goal-check { top: 4px; right: 5px; }
   :where([data-theme="plant"]) .legend { padding-right: .5rem; margin-top: .75rem; }
   :where([data-theme="plant"]) .day-band { padding: 1.25rem; }
   :where([data-theme="plant"]) .bottom-sheet { border-radius: 16px 16px 0 0; }

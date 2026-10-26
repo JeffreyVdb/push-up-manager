@@ -40,6 +40,12 @@ const captures = process.env.PUSHUP_SCREENSHOTS;
     await page.locator('#reps').fill('99'); await page.locator('#log-submit').click();
     await page.waitForFunction(()=>document.querySelector('#goal-progress-text').textContent.includes('99 / 100'));
     assert.equal(await page.locator('.day.goal-reached').count(),0);
+    const fill = d => page.locator(`.day[data-day="${d}"]`).evaluate(el=>({level:el.style.getPropertyValue('--fill'),partial:el.classList.contains('is-partial'),total:el.querySelector('.day-fill .t').textContent}));
+    assert.deepEqual(await fill(session.today),{level:'99%',partial:true,total:'99'},'a goal day fills to its share of the target');
+    if(await page.locator(`.day[data-day="${yesterday}"]`).count()) {
+      const before = await fill(yesterday);
+      assert.deepEqual(before,{level:before.total==='0'?'0%':'100%',partial:false,total:before.total},'a day before any goal is empty or full, never partial');
+    }
     await page.locator('#reps').fill('1'); await page.locator('#log-submit').click();
     await page.locator('#goal-reflection').waitFor({state:'visible'});
     await page.locator(`.day[data-day="${session.today}"].goal-reached`).waitFor();
@@ -96,6 +102,7 @@ const captures = process.env.PUSHUP_SCREENSHOTS;
     await ctx.request.delete(base+'/api/reps/'+entry.id,{headers:{'X-CSRF-Token':session.csrf_token}});
     await page.locator('#goal-reflection').waitFor({state:'hidden'});
     assert.equal(await page.locator('.day.goal-reached').count(),0,'deletion removes completion');
+    assert.equal((await fill(session.today)).level,'66.7%','deletion lowers the fill');
     // Start a separate touch device at phone width; do not infer phone behavior
     // solely from resizing the desktop context.
     const phone = await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2,reducedMotion:'reduce',storageState:await ctx.storageState()});

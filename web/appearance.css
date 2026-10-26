@@ -2,6 +2,13 @@
 :root[data-mode="light"] { color-scheme: light; }
 :root[data-mode="dark"] { color-scheme: dark; }
 
+/* Keep the full goal track visible against dark panels, even before any reps. */
+:root[data-mode="dark"] .day-goal progress {
+  appearance: none;
+  outline: 1px solid var(--control-rule);
+  outline-offset: 1px;
+}
+
 :root[data-theme="plant"][data-mode="dark"] {
   --ink: #111b15;
   --slab: #1b2920;

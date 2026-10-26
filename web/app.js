@@ -1216,7 +1216,13 @@ function buildMonth(body, res) {
     check.setAttribute("class", "ico day-goal-check");
     check.setAttribute("aria-hidden", "true");
     check.innerHTML = '<use href="#i-check"></use>';
-    btn.append(num, val, check);
+    // The fill repeats the date and total in ink and is clipped to its own
+    // level, so a number cut by the fill changes colour exactly at the line.
+    const fill = document.createElement("span");
+    fill.className = "day-fill";
+    fill.setAttribute("aria-hidden", "true");
+    fill.append(num.cloneNode(true), val.cloneNode());
+    btn.append(num, val, check, fill);
     btn.addEventListener("click", () => loadDay(key));
 
     td.append(btn);
@@ -1270,13 +1276,20 @@ async function loadCalendar() {
     if (!rebuilt && refreshing && val.textContent !== String(total)) pulseDay(btn);
 
     setText(val, String(total));
+    setText(btn.children[3].children[1], String(total));
     setAttr(btn, "data-active", String(total > 0));
     const color = heatColor(total, peak);
     if (btn.style.getPropertyValue("--day-heat") !== color) btn.style.setProperty("--day-heat", color);
     const goal = goalForDate(res.goals || [], key);
-    const reached = Boolean(goal && key <= res.today && total >= goal.target);
-    if (goal && key <= res.today) eligible++;
+    const tracked = Boolean(goal && key <= res.today);
+    const reached = tracked && total >= goal.target;
+    if (tracked) eligible++;
     if (reached) completed++;
+    // A goal day fills to its share of the target; any other logged day is
+    // simply full of its heat.
+    const level = tracked ? Math.min(100, Math.round((total / goal.target) * 1000) / 10) : total > 0 ? 100 : 0;
+    btn.classList.toggle("is-partial", level > 0 && level < 100);
+    if (btn.style.getPropertyValue("--fill") !== `${level}%`) btn.style.setProperty("--fill", `${level}%`);
     const wasReached = btn.classList.contains("goal-reached");
     btn.classList.toggle("goal-reached", reached);
     if (!rebuilt && reached && !wasReached) move(btn.children[2], [
