@@ -408,11 +408,11 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
 .calendar-viewport {
   position: relative;
   overflow: hidden;
-  /* The clip reaches as far as the grid bleeds (.5rem a side), with room for
-     a cell's focus ring above and a lifted cell's shadow below; the content
-     box stays the band's own. */
-  padding: 4px .5rem 1.25rem;
-  margin: -4px -.5rem -1.25rem;
+  /* The clip reaches past the grid's .5rem bleed by the width of today's
+     outline, with room for a focus ring above and a lifted cell's shadow
+     below; the content box stays the band's own. */
+  padding: 4px calc(.5rem + 4px) 1.25rem;
+  margin: -4px calc(-.5rem - 4px) -1.25rem;
   touch-action: pan-y pinch-zoom;
   user-select: none;
   -webkit-user-select: none;
