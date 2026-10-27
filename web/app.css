@@ -566,14 +566,15 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
   align-items: center;
   gap: .75rem;
   padding: .625rem 0;
-  border-bottom: 1px solid var(--rule);
 }
-.entries li:first-child, .typelist li:first-child { border-top: 1px solid var(--rule); }
+/* The day's sets read as one column under the goal's closing rule, so they
+   carry no rules of their own. */
+.typelist li { border-bottom: 1px solid var(--rule); }
+.typelist li:first-child { border-top: 1px solid var(--rule); }
 /* A band's heading rule already closes its header. A list that opens the band
    sits straight under that rule, so its own top rule would draw a second
    hairline a gap below the first with nothing between them. */
 .band-title + .typelist > li:first-child,
-.band-title + .entries > li:first-child,
 .band-title + .board > .lb:first-child,
 .band-head + .board > .lb:first-child,
 .subhead + .typelist > li:first-child { border-top: 0; }
