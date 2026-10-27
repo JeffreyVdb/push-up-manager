@@ -24,11 +24,13 @@
   --on-signal: #172711;
   --on-signal-pressed: #172711;
   --heat-0: #233026;
-  --heat-1: #8cae79;
-  --heat-2: #9cbf80;
-  --heat-3: #b6cf90;
-  --heat-4: #c7dfa2;
-  --heat-ink: #172711;
+  --heat-1: #6d935b;
+  --heat-2: #90b16d;
+  --heat-3: #b9d386;
+  --heat-4: #e2f1ac;
+  --heat-ink: #0d1a0a;
+  --heat-wash: rgb(226 241 172 / .4);
+  --heat-lift: rgb(0 0 0 / .6);
   --petal: #29232f;
   --plum: #d5c2df;
   --day-rule: #534759;

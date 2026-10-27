@@ -408,8 +408,11 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
 .calendar-viewport {
   position: relative;
   overflow: hidden;
-  padding: 4px;
-  margin: -4px;
+  /* The clip reaches past the grid's .5rem bleed by the width of today's
+     outline, with room for a focus ring above and a lifted cell's shadow
+     below; the content box stays the band's own. */
+  padding: 4px calc(.5rem + 4px) 1.25rem;
+  margin: -4px calc(-.5rem - 4px) -1.25rem;
   touch-action: pan-y pinch-zoom;
   user-select: none;
   -webkit-user-select: none;
@@ -483,6 +486,14 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
 .day.pulse { animation: pulse .42s var(--ease); }
 @keyframes pulse {
   0%   { transform: scale(1); filter: brightness(2.4); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+/* The committed day. A set lands on this one cell: Classic stamps it, the
+   scoreboard flash with weight behind it, while the script lands the total
+   through the shared number motion. Plant replaces the stamp below. */
+.day.land { z-index: 2; animation: stamp .46s var(--ease); }
+@keyframes stamp {
+  0%   { transform: scale(1.1); filter: brightness(2.4); }
   100% { transform: scale(1); filter: brightness(1); }
 }
 
