@@ -1248,8 +1248,14 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
   --today-muted: var(--ash);
   --lane-a: var(--heat-1);
   --lane-b: var(--heat-2);
-  --race-lead: var(--bone);
   --race-other: var(--control-rule);
+  /* One hue per crew member past you, checked pairwise for normal and
+     red-green color vision against the dark slab and the signal. */
+  --race-1: #42b9c5;
+  --race-2: #b43f7f;
+  --race-3: #4b943b;
+  --race-4: #bd8bf3;
+  --race-5: #2e80e0;
 }
 .today-strip {
   display: grid;
@@ -1323,17 +1329,68 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
 .race-ahead { stroke: var(--rule); stroke-dasharray: 2 4; }
 .race-axis, .race-day { font: 600 11px var(--text); fill: var(--ash); }
 .race-day.is-today { fill: var(--today-ink); font-weight: 800; }
-.race-line { fill: none; stroke: var(--race-other); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.race-line.is-lead { stroke: var(--race-lead); stroke-width: 2.5; }
-.race-line.is-me { stroke: var(--signal); stroke-width: 4; }
-.race-dot { fill: var(--signal); stroke: var(--slab); stroke-width: 2; }
-.race-name { font: 700 12px var(--text); fill: var(--ash); }
-.race-name.is-lead { fill: var(--bone); }
-.race-name.is-me { fill: var(--signal); }
+.race-runner { --c: var(--race-other); transition: opacity .2s var(--ease); }
+.race-chart.has-focus .race-runner:not(.is-focus) { opacity: .25; }
+.race-line { fill: none; stroke: var(--c); stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; }
+.race-runner.is-me .race-line { stroke-width: 4; }
+.race-runner.is-focus .race-line { stroke-width: 3; }
+.race-runner.is-me.is-focus .race-line { stroke-width: 4.5; }
+/* A wide invisible twin of each line, so a thumb does not have to land on 2px. */
+.race-hit { fill: none; stroke: transparent; stroke-width: 18; stroke-linecap: round; stroke-linejoin: round; pointer-events: stroke; }
+.race-runner.is-alt .race-line { stroke-dasharray: 6 4; }
+.race-stem { fill: none; stroke: var(--c); stroke-width: 1.25; stroke-dasharray: 1 3; stroke-linecap: round; }
+.race-end { fill: var(--c); stroke: var(--slab); stroke-width: 1.5; }
+.race-pin { fill: var(--slab); stroke: var(--c); stroke-width: 2.5; }
+.race-runner.is-alt .race-pin { stroke-dasharray: 3.5 2.5; }
+.race-runner.is-me .race-pin { fill: var(--c); stroke: var(--slab); stroke-width: 2; }
+.race-rank { font: 800 10px var(--text); font-variant-numeric: tabular-nums; fill: var(--bone); pointer-events: none; }
+.race-runner.is-me .race-rank { fill: var(--on-signal); }
+.race-flag { pointer-events: none; }
+.race-flag rect { fill: var(--slab); stroke: var(--c); stroke-width: 1.5; }
+.race-flag text { font: 600 12px var(--text); font-variant-numeric: tabular-nums; fill: var(--ash); }
+.race-flag-name { font-weight: 700; fill: var(--bone); }
+.race-key {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: .125rem 1.25rem;
+  margin: .5rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: .875rem;
+}
+.race-key-row {
+  --c: var(--race-other);
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: .5rem;
+  margin-inline: -.375rem;
+  padding: .3125rem .375rem;
+  color: var(--bone);
+  transition: background-color .2s var(--ease);
+}
+.race-key-row.is-focus { background: var(--slab-2); }
+.race-key-pin {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2.5px var(--c);
+  font-size: .625rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.race-key-row.is-alt .race-key-pin { box-sizing: border-box; box-shadow: none; border: 2px dashed var(--c); }
+.race-key-row.is-me .race-key-pin { background: var(--c); box-shadow: none; color: var(--on-signal); }
+.race-key-name { display: flex; align-items: baseline; gap: .375rem; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.race-key-row.is-me .race-key-name { font-weight: 800; }
+.race-key-name .lb-you { font-size: .625rem; }
+.race-key-num { font-weight: 700; }
 .long { margin-top: 2.25rem; }
 .long .board-head { align-items: baseline; }
 @media (prefers-reduced-motion: reduce) {
-  .lane-fill, .seg { transition: none; }
+  .lane-fill, .seg, .race-runner, .race-key-row { transition: none; }
 }
 :where([data-theme="plant"]) .board-scopes [aria-pressed="true"] { color: var(--on-signal); }
 :where([data-theme="plant"]) #leaderboard-metric { border-radius: 8px; }

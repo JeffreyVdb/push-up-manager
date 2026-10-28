@@ -109,6 +109,11 @@
   --display: "Fraunces", Georgia, serif;
   --petal: #ece7f1;
   --plum: #665270;
+  --race-1: #068fa7;
+  --race-2: #c16192;
+  --race-3: #8a832f;
+  --race-4: #813873;
+  --race-5: #7367d6;
   --sheet-backdrop: rgb(7 24 17 / .6);
   --shadow-lift: 0 -12px 36px -20px rgb(32 61 46 / .22);
 }
@@ -311,7 +316,6 @@
   --today-muted: var(--day-muted);
   --lane-a: var(--heat-4);
   --lane-b: var(--heat-3);
-  --race-lead: var(--heat-3);
   --race-other: var(--rule);
 }
 :where([data-theme="plant"]) .today-strip { border-radius: 12px; }
@@ -323,6 +327,7 @@
 :where([data-theme="plant"]) .week-views .ptab.is-on { background: var(--slab); color: var(--bone); box-shadow: 0 1px 3px rgb(32 61 46 / .18); }
 :where([data-theme="plant"]) .week-views.has-rail::after { display: none; }
 :where([data-theme="plant"]) .week-key i { border-radius: 3px; }
+:where([data-theme="plant"]) .race-key-row { border-radius: 6px; }
 :where([data-theme="plant"]) .lane-track { border-radius: 7px; overflow: hidden; }
 :where([data-theme="plant"]) .lane-row .lb-num { font-weight: 500; }
 :where([data-theme="plant"]) .requests { border-top: 0; background: var(--slab-2); }

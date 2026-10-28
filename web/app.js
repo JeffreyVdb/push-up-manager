@@ -1982,6 +1982,9 @@ function renderLanes() {
 // The week as a race: each person's running total from Monday. Redrawn only
 // when the numbers change, so an unchanged refresh leaves it still.
 let raceKey = "";
+// The person whose line is picked out by hover or tap, by user ID.
+let raceFocus = null;
+const RACE_HUES = 5;
 
 function niceStep(raw) {
   const mag = 10 ** Math.floor(Math.log10(Math.max(raw, 1)));
@@ -2022,15 +2025,13 @@ function renderRace() {
   const H = 196, left = 34, top = 14, bottom = 166;
   setAttr(svg, "viewBox", `0 0 ${W} ${H}`);
   const today = weekDays(rows[0]).length - 1;
-  // Long usernames are cut short here; the label below carries them whole.
-  const cut = W < 340 ? 7 : 12;
-  const short = (name) => (name.length > cut ? `${name.slice(0, cut - 1)}…` : name);
-  const nameOf = (r) => `${r.me ? "you" : short(r.username)} ${r.weekly}`;
-  // Names sit at the end of their lines. Late in the week the days narrow so
-  // the longest name still fits beside today's point.
-  const labelWidth = Math.max(...rows.map((r) => nameOf(r).length)) * 6.8 + 10;
-  const step = Math.min((W - 16 - left) / 6, today ? (W - labelWidth - left) / today : Infinity);
+  // The rank pins sit just past today's column, on the slab, and a gutter
+  // past Sunday keeps room for them, so the week keeps the same columns on
+  // any width and any weekday. Names live in the key below.
+  const pinR = 8;
+  const step = (W - left - 2 * pinR - 4) / 6.5;
   const x = (d) => left + d * step;
+  const pinX = (d) => x(d) + step / 2 + pinR + 2;
   const right = x(6);
   const peak = Math.max(10, ...rows.map((r) => r.weekly));
   const tick = niceStep(peak / 3);
@@ -2059,36 +2060,67 @@ function renderRace() {
     parts.push(el("text", { class: d === today ? "race-day is-today" : "race-day", x: x(d), y: H - 10, "text-anchor": "middle" }, label));
   }
 
-  // Everyone else first, the week leader over them, you on top.
-  const lead = rows[0].weekly;
-  const role = (r) => (r.me ? "is-me" : lead > 0 && r.weekly === lead ? "is-lead" : "");
-  const layer = (r) => (r.me ? 2 : role(r) ? 1 : 0);
-  const ends = [];
-  for (const r of [...rows].sort((a, b) => layer(a) - layer(b))) {
-    let run = 0;
-    const points = weekDays(r).map((n, d) => { run += n; return `${x(d).toFixed(1)},${y(run).toFixed(1)}`; });
-    if (points.length === 1) points.unshift(`${(x(0) - 0.01).toFixed(2)},${y(run).toFixed(1)}`);
-    parts.push(el("polyline", { class: `race-line ${role(r)}`, points: points.join(" ") }));
-    ends.push({ row: r, y: y(r.weekly) });
-  }
-  const me = rows.find((r) => r.me);
-  parts.push(el("circle", { class: "race-dot", cx: x(today), cy: y(me.weekly), r: 5 }));
+  // Each person keeps one color for as long as the crew stays the same: you
+  // in signal, everyone else by user ID through the five race hues. Past the
+  // fifth the hues come round again on a dashed line. Rank never repaints.
+  const hue = new Map(rows.filter((r) => !r.me).sort((a, b) => a.user_id - b.user_id)
+    .map((r, i) => [r.user_id, { color: `var(--race-${(i % RACE_HUES) + 1})`, alt: i >= RACE_HUES }]));
+  const runners = rows.map((r, i) => ({
+    row: r, rank: sharedRank(rows, "weekly", i), y: y(r.weekly),
+    ...(r.me ? { color: "var(--signal)", alt: false } : hue.get(r.user_id)),
+  }));
+  const runnerClass = (p, base) => `${base}${p.row.me ? " is-me" : ""}${p.alt ? " is-alt" : ""}`;
 
-  // Nudge close totals apart so no two names overlap, keeping each as near
-  // its own line as the stack allows.
-  ends.sort((a, b) => a.y - b.y || b.row.weekly - a.row.weekly);
-  const spacing = 15;
-  let floor = top - 2;
-  for (const end of ends) { end.ly = Math.max(end.y + 4, floor); floor = end.ly + spacing; }
-  let ceilingY = bottom + 4;
-  for (let i = ends.length - 1; i >= 0; i--) {
-    ends[i].ly = Math.min(ends[i].ly, ceilingY);
-    ceilingY = ends[i].ly - spacing;
-  }
-  for (const end of ends) {
-    parts.push(el("text", { class: `race-name ${role(end.row)}`, x: x(today) + 10, y: end.ly }, nameOf(end.row)));
+  // Pins stack beside today's point in rank order, nudged apart so no two
+  // touch; a short stem ties each one back to the end of its own line.
+  const lo = top - 4, hi = bottom;
+  const gap = Math.min(2 * pinR + 2, (hi - lo) / Math.max(runners.length - 1, 1));
+  const stack = [...runners].sort((a, b) => a.y - b.y || a.rank - b.rank);
+  let floor = lo;
+  for (const p of stack) { p.py = Math.max(p.y, floor); floor = p.py + gap; }
+  let roof = hi;
+  for (let i = stack.length - 1; i >= 0; i--) { stack[i].py = Math.min(stack[i].py, roof); roof = stack[i].py - gap; }
+
+  // Everyone else first, you on top.
+  for (const p of [...runners].sort((a, b) => a.row.me - b.row.me)) {
+    let run = 0;
+    const points = weekDays(p.row).map((n, d) => { run += n; return `${x(d).toFixed(1)},${y(run).toFixed(1)}`; });
+    if (points.length === 1) points.unshift(`${(x(0) - 0.01).toFixed(2)},${y(run).toFixed(1)}`);
+    const g = el("g", {
+      class: runnerClass(p, "race-runner"), style: `--c: ${p.color}`,
+      "data-user-id": p.row.user_id, "data-end-x": x(today), "data-end-y": p.y,
+      "data-pin-x": pinX(today) + pinR, "data-pin-y": p.py,
+      "data-name": p.row.me ? "You" : p.row.username, "data-total": p.row.weekly,
+    });
+    g.append(
+      el("polyline", { class: "race-line", points: points.join(" ") }),
+      el("polyline", { class: "race-hit", points: points.join(" ") }),
+      el("path", { class: "race-stem", d: `M${x(today).toFixed(1)} ${p.y.toFixed(1)}L${(pinX(today) - pinR).toFixed(1)} ${p.py.toFixed(1)}` }),
+      // The line's data stops here; the dotted stem after it only points.
+      el("circle", { class: "race-end", cx: x(today), cy: p.y, r: p.row.me ? 5 : 3.5 }),
+      el("circle", { class: "race-pin", cx: pinX(today), cy: p.py, r: pinR }),
+      el("text", { class: "race-rank", x: pinX(today), y: p.py + 3.5, "text-anchor": "middle" }, String(p.rank)),
+    );
+    parts.push(g);
   }
   svg.replaceChildren(...parts);
+
+  // The key under the chart carries every name whole, pinned like its line.
+  $("race-key").replaceChildren(...runners.map((p) => {
+    const li = document.createElement("li");
+    li.className = runnerClass(p, "race-key-row");
+    li.dataset.userId = String(p.row.user_id);
+    li.style.setProperty("--c", p.color);
+    li.innerHTML = '<span class="race-key-pin tnum"></span><span class="race-key-name"><span class="lb-who"></span>' +
+      '<span class="lb-you" hidden>YOU</span></span><span class="race-key-num tnum"></span>';
+    const [pin, name, num] = li.children;
+    pin.textContent = String(p.rank);
+    name.firstChild.textContent = p.row.username;
+    name.lastChild.hidden = !p.row.me;
+    num.textContent = String(p.row.weekly);
+    return li;
+  }));
+  focusRunner(raceFocus, true);
   // The lanes, and their numbers, are hidden behind this view, so the label
   // carries every day as well as every total.
   setAttr(svg, "aria-label", `Running totals this week. ` + rows.map((r) => {
@@ -2096,6 +2128,57 @@ function renderRace() {
     return `${r.username}${r.me ? " (you)" : ""} ${r.weekly}: ${days}`;
   }).join(". ") + ".");
   if (changed) move(svg, [{ opacity: .4 }, { opacity: 1 }], 340);
+}
+
+// Picks out one line: the others fade, the line comes to the front, and a
+// flag beside its end names it in full. Its key row lights up too.
+function focusRunner(id, redrawn = false) {
+  const svg = $("race-chart");
+  if (id === raceFocus && !redrawn) return;
+  const g = id == null ? null : svg.querySelector(`.race-runner[data-user-id="${id}"]`);
+  raceFocus = g ? id : null;
+  svg.querySelector(".race-flag")?.remove();
+  svg.classList.toggle("has-focus", !!g);
+  for (const runner of svg.querySelectorAll(".race-runner")) runner.classList.toggle("is-focus", runner === g);
+  for (const li of $("race-key").children) li.classList.toggle("is-focus", li.dataset.userId === raceFocus);
+  // Back in drawing order, with you on top, unless someone is picked out.
+  const runners = [...svg.querySelectorAll(".race-runner")];
+  for (const runner of runners) if (!runner.classList.contains("is-me")) svg.append(runner);
+  svg.append(...runners.filter((runner) => runner.classList.contains("is-me")));
+  if (!g) return;
+  svg.append(g);
+
+  const NS = "http://www.w3.org/2000/svg";
+  const flag = document.createElementNS(NS, "g");
+  flag.setAttribute("class", "race-flag");
+  flag.style.setProperty("--c", g.style.getPropertyValue("--c"));
+  const box = document.createElementNS(NS, "rect");
+  const text = document.createElementNS(NS, "text");
+  const name = document.createElementNS(NS, "tspan");
+  name.setAttribute("class", "race-flag-name");
+  name.textContent = g.dataset.name;
+  const total = document.createElementNS(NS, "tspan");
+  total.textContent = ` ${g.dataset.total}`;
+  text.append(name, total);
+  flag.append(box, text);
+  svg.append(flag);
+
+  // Beside its pin, out in the days still to come, which never hold a line.
+  // Late in the week there is no room there, so it goes above and to the
+  // left of the line's end, or below it when the line is near the top.
+  const W = svg.viewBox.baseVal.width, H = svg.viewBox.baseVal.height, h = 22, pad = 8;
+  const w = text.getComputedTextLength() + pad * 2;
+  const ex = Number(g.dataset.endX), ey = Number(g.dataset.endY);
+  let fx = Number(g.dataset.pinX) + 6;
+  let fy = Math.min(Math.max(Number(g.dataset.pinY) - h / 2, 2), H - h - 30);
+  if (fx + w > W - 2) {
+    fx = Math.max(2, ex - 10 - w);
+    fy = ey - h - 8;
+    if (fy < 0) fy = ey + 8;
+  }
+  for (const [k, v] of Object.entries({ x: fx, y: fy, width: w, height: h, rx: 6 })) box.setAttribute(k, String(v));
+  text.setAttribute("x", String(fx + pad));
+  text.setAttribute("y", String(fy + 15));
 }
 
 function savedWeekView() {
@@ -2503,6 +2586,23 @@ function wire() {
   $("cal-next").addEventListener("click", () => shiftMonth(1));
   calendarSwipe = setupCalendarSwipe();
   new ResizeObserver(() => renderRace()).observe($("race-chart"));
+  // Hover a line, its pin or its key row to name it on the chart. A finger
+  // never hovers, so a tap picks instead and a second tap, or one anywhere
+  // else, lets go. A drag that scrolls the page cancels and picks nothing.
+  for (const [area, pick] of [[$("race-chart"), ".race-runner"], [$("race-key"), ".race-key-row"]]) {
+    area.addEventListener("pointerover", (e) => {
+      if (e.pointerType === "mouse") focusRunner(e.target.closest(pick)?.dataset.userId ?? null);
+    });
+    area.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") focusRunner(null); });
+    area.addEventListener("pointerup", (e) => {
+      if (e.pointerType === "mouse") return;
+      const id = e.target.closest(pick)?.dataset.userId ?? null;
+      focusRunner(id === raceFocus ? null : id);
+    });
+  }
+  document.addEventListener("pointerdown", (e) => {
+    if (raceFocus != null && !e.target.closest?.("#race-chart, #race-key")) focusRunner(null);
+  });
   $("day-today").addEventListener("click", () => loadDay(state.today).catch((e) => toast(e.message)));
 
   $("scope-everyone").addEventListener("click", () => setBoardScope("everyone"));

@@ -24,6 +24,11 @@ colors:
   day-rule: "#cfc5d6"
   day-muted: "#62546a"
   selection: "#cadba9"
+  race-1: "#068fa7"
+  race-2: "#c16192"
+  race-3: "#8a832f"
+  race-4: "#813873"
+  race-5: "#7367d6"
   classic-ink: "#070807"
   classic-slab: "#101311"
   classic-slab-2: "#171b19"
@@ -42,6 +47,11 @@ colors:
   control-rule: "#74866a"
   classic-control-rule: "#77867b"
   classic-signal-hover: "#ff6534"
+  classic-race-1: "#42b9c5"
+  classic-race-2: "#b43f7f"
+  classic-race-3: "#4b943b"
+  classic-race-4: "#bd8bf3"
+  classic-race-5: "#2e80e0"
   plant-dark-ink: "#111b15"
   plant-dark-slab: "#1b2920"
   plant-dark-slab-2: "#28392b"
@@ -67,6 +77,11 @@ colors:
   plant-dark-day-rule: "#534759"
   plant-dark-day-muted: "#c0b0c9"
   plant-dark-selection: "#42583a"
+  plant-dark-race-1: "#2ea584"
+  plant-dark-race-2: "#d96858"
+  plant-dark-race-3: "#867017"
+  plant-dark-race-4: "#ba69cd"
+  plant-dark-race-5: "#4f8cf2"
   classic-light-ink: "#f3f1ea"
   classic-light-slab: "#fffef9"
   classic-light-slab-2: "#e7e5dd"
@@ -83,6 +98,11 @@ colors:
   classic-light-on-signal-pressed: "#fffef9"
   classic-light-placeholder: "#5a635a"
   classic-light-tail-rule: "#5a635a"
+  classic-light-race-1: "#068fa7"
+  classic-light-race-2: "#c16192"
+  classic-light-race-3: "#8a832f"
+  classic-light-race-4: "#813873"
+  classic-light-race-5: "#7367d6"
   classic-light-heat-0: "#e8e9e1"
 typography:
   display:
@@ -212,7 +232,7 @@ ROOTED light pairs pale botanical grounds with dark green text; ROOTED dark uses
 
 - **Forest** (`--signal`) identifies primary actions, focus, current-day outline and active rails. **Deep forest** (`--signal-deep`) handles hover and pressed actions in light mode; the dark variant brightens this role.
 - **Leaf bar** (`--signal-mid`) fills non-leader bars in the Month / All time list; the leader uses forest. Keep the visible track and printed totals.
-- The crew week uses role aliases onto existing tokens, never new values. Lane segments for earlier days take `--lane-a` or `--lane-b` by weekday (Monday, Wednesday and Friday on `--lane-a`): **full leaf** and **leaf** (`--heat-4` / `--heat-3`) in ROOTED, cold steel and muted olive (`--heat-1` / `--heat-2`) in Classic. In the race chart your line is signal; tied week leaders use `--race-lead` (ROOTED light `--heat-3`, ROOTED dark `--heat-1`, Classic `--bone`) and everyone else `--race-other` (ROOTED `--rule`, Classic `--control-rule`). End-of-line names are ash, the leader's bone and yours signal, whatever the line color.
+- The crew week uses role aliases onto existing tokens, never new values. Lane segments for earlier days take `--lane-a` or `--lane-b` by weekday (Monday, Wednesday and Friday on `--lane-a`): **full leaf** and **leaf** (`--heat-4` / `--heat-3`) in ROOTED, cold steel and muted olive (`--heat-1` / `--heat-2`) in Classic. In the race chart your line is signal. Everyone else takes one of five race hues, `--race-1` to `--race-5` (teal, rose, ochre, plum, violet in light; Plant dark and Classic dark take their own steps of the same families, Classic dark swapping ochre for a moss green so it stays clear of its orange signal). These are the one exception to aliasing: they are categorical identity colors, validated all-pairs against each other and the theme's signal for normal vision (ΔE ≥ 15) and protan/deutan simulation (ΔE ≥ 6, legal because rank pins and the key carry identity too), at ≥ 3:1 on the slab and on today ground, since every line crosses the today column. Hues follow the person, not the rank: crew members take them in user-ID order, and from the sixth person after you the hues come round again on a dashed line, dashed pin ring and dashed key pin, so every line stays visible and distinct. Text never wears a race hue; pins and key rows carry the color beside bone and ash text.
 - The calendar ramps from **shoot** through **sprout** and **leaf** to **full leaf** (`--heat-1` through `--heat-4`). A total's position on the ramp is the square root of its share of the month's peak, so a tenth of the peak sits about a third of the way up and ten reps read apart from a hundred; positive totals interpolate continuously in sRGB between stops at 0%, 40%, 70% and 100% of that position. The ramp spans pale shoot to a deep leaf in light mode and dim moss to pale leaf in dark mode; **heat text** is a near-black green that holds 4.5:1 on every stop. Empty days use **heat empty** and muted text. Numeric totals and accessible names remain authoritative.
 
 ### Secondary
@@ -245,7 +265,7 @@ Fraunces supplies the organic wordmark, headings and large numbers. Archivo keep
 - **Display:** the introductory heading uses the frontmatter display role; mobile fixes it at 2.5rem. The sign-in wordmark uses its separate wordmark role.
 - **Titles:** general headings use the title role. The calendar and board title step up to 1.75rem; both become 1.5rem on mobile. The board title reads “The board” in ROOTED and stays “THE BOARD” in Classic. Board subsection titles (“This week”, “Long game”) use the display face at 1.25rem: weight 500 in sentence case in ROOTED, weight 800 in uppercase in Classic.
 - **Numbers:** summary totals use the number role, reduced to 1.875rem on mobile. Selected-day totals and the today strip's leading number use 2.5rem in the display face (weight 500 in ROOTED, 800 in Classic). Calendar totals use Archivo at 1.0625rem, reduced to .875rem on mobile.
-- **Chart text:** the race chart is drawn at its own pixel width, so its Archivo labels hold real sizes: 11px weight 600 for axis values and day labels, 12px weight 700 for names. Its viewBox tracks the measured pixel width, so labels render at their stated sizes rather than scaling with the container.
+- **Chart text:** the race chart is drawn at its own pixel width, so its Archivo labels hold real sizes: 11px weight 600 for axis values and day labels, 10px weight 800 for rank pins, and 12px for the hover flag (name weight 700, total 600). Its viewBox tracks the measured pixel width, so labels render at their stated sizes rather than scaling with the container.
 - **Body:** the frontmatter body role governs the default plant surface. Text/password inputs remain 1rem.
 - **Actions:** buttons and tabs use the action role and retain uppercase commands. Field labels use .8125rem without forced uppercase; compact metadata uses .6875rem.
 
@@ -324,7 +344,7 @@ The board opens on **Crew**, and signing in returns it there. Crew puts today an
 **This week** has a title, the date range and a **Lanes** / **Race** tablist; the choice persists per browser in localStorage (`pushup-counter:week-view`) and falls back to Lanes when storage is unavailable.
 
 - **Lanes.** A small legend (Earlier days, Today) sits above a ranked list. Each row shows rank (signal for week leaders), name, `+N today` in today ink (ash at zero) and the week total, above a 14px sage-well track (7px corners in ROOTED). The fill's width is the share of the week's peak, at least 2% for any nonzero week, and it is built from one segment per day with reps, sized by that day's reps, with 2px gaps; zero days are omitted, earlier days take the lane colors by weekday and today's segment takes today ink. Your track carries a 2px signal outline offset 2px, and a signal gap line below it: “N to pass X”, “N ahead of X” or “Tied with X. One rep takes it.” Rows reconcile by user ID and slide to new positions; segments rebuild only when a day gets its first rep. Accessible row names include rank, total, the gap to the row above and the split by day.
-- **Race.** A standing line (“X leads the week.”, “You lead the week.”, “You share the lead.”, with your gap in signal) sits above an SVG of each person's running total from Monday. The today column is grounded in today ground; light gridlines carry axis values at the left; future days are dashed; day labels collapse to initials when columns are narrower than 38px, and today's label is today ink. Your line is 4px signal with an end dot ringed in slab; week leaders draw slightly heavier in race-lead; others are 2px race-other. Names and totals sit at the end of each line beside today's point, nudged apart so they never overlap, with long names cut to 7 characters below 340px and 12 above; late in the week the plot narrows so the names fit. The chart is `role="img"`, and its accessible name lists every person's total and daily split. It redraws only when its width or data changes.
+- **Race.** A standing line (“X leads the week.”, “You lead the week.”, “You share the lead.”, with your gap in signal) sits above an SVG of each person's running total from Monday. The today column is grounded in today ground; light gridlines carry axis values at the left; future days are dashed; day labels collapse to initials when columns are narrower than 38px, and today's label is today ink. Each line is drawn in its person's race hue, 2.25px; yours is 4px signal and sits on top. No names are drawn on the plot. Each line's data ends in a dot at today's point (3.5px radius, yours 5px, ringed in slab), then a dotted 1.25px stem that only points runs to a numbered **rank pin** (8px radius, slab fill, 2.5px ring in the line's hue, bone numeral; yours filled signal with an on-signal numeral), stacked beside today's point and nudged apart so no two touch. Tied totals share a rank. The pins sit just past the today column, on the slab, and a fixed gutter past Sunday keeps room for them, so the seven columns never narrow for labels. Below the chart, the **key** lists everyone in rank order with the same pin, the full username (wrapping, never cut), the `YOU` tag and the week total, in an auto-fill grid of 9.5rem-minimum columns. Hovering a line, its pin or its key row, or tapping one on touch, picks that person out: the other runners fade to 25% over 200ms, the line thickens and comes to the front, its key row takes a sage-well ground (6px corners in ROOTED), and a slab **flag** ringed in the line's hue names them and their total beside the pin, out in the days still to come; on Saturday and Sunday, when there is no room there, it sits above and left of the line's end. A mouse picks on hover and clears on leaving. Touch and pen pick on a tap that does not scroll; tapping the same runner again, or anywhere outside the chart and key, lets go. Each line has an 18px invisible hit twin so a thumb need not land on 2px. The chart is `role="img"`, and its accessible name lists every person's total and daily split; the key is `aria-hidden` because that name already reads it. It redraws only when its width or data changes, and a redraw keeps the current pick.
 
 **Long game** carries the existing bar list for **MONTH** (the default) and **ALL TIME** in its own period tabs: forest for first-ranked rows, leaf-bar for other shares, a minimum visible share for nonzero totals, and `+N TO PASS`, which counts the rep that passes (the difference plus one). Existing rows reconcile by user ID and travel to changed positions or totals; unchanged refreshes do not refill bars or animate lanes. With one person in the crew, the strip, week and long game all hide behind the existing invitation to add someone. Crew data comes from `/api/friends`, whose rows carry Monday-to-today `week_days` and whose response names `week_start`.
 

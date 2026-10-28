@@ -29,7 +29,11 @@
   --heat-3: #b9d386;
   --heat-4: #e2f1ac;
   --heat-ink: #0d1a0a;
-  --race-lead: var(--heat-1);
+  --race-1: #2ea584;
+  --race-2: #d96858;
+  --race-3: #867017;
+  --race-4: #ba69cd;
+  --race-5: #4f8cf2;
   --heat-wash: rgb(226 241 172 / .4);
   --heat-lift: rgb(0 0 0 / .6);
   --petal: #29232f;
@@ -50,6 +54,11 @@
   --ash: #5a635a;
   --signal: #b8320b;
   --signal-deep: #922707;
+  --race-1: #068fa7;
+  --race-2: #c16192;
+  --race-3: #8a832f;
+  --race-4: #813873;
+  --race-5: #7367d6;
   --signal-hover: #a42c08;
   --signal-mid: #ce5936;
   --warn: #8c410b;

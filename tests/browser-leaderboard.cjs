@@ -115,6 +115,13 @@ const captures = process.env.PUSHUP_SCREENSHOTS;
     assert.equal(await page.locator('#race-chart .race-line').count(),2);
     assert.equal(await page.locator('#race-standing').textContent(),`${rivalName} leads the week. 76 to pass ${rivalName}.`);
     assert.match(await page.locator('#race-chart').getAttribute('aria-label'),new RegExp(`${rivalName} 400: (.*, )?today 400\\. board_\\d+ \\(you\\) 325: .*today 325`));
+    // Rank pins end each line; the key under the chart names them in full.
+    assert.deepEqual(await page.locator('#race-chart .race-rank').allTextContents(),['1','2']);
+    assert.deepEqual(await page.locator('#race-key .lb-who').allTextContents(),[rivalName,name]);
+    await page.locator('#race-key li').first().hover();
+    assert.equal(await page.locator('#race-chart .race-flag').textContent(),`${rivalName} 400`);
+    await page.mouse.move(0,0);
+    assert.equal(await page.locator('#race-chart .race-flag').count(),0);
     await page.reload();
     await page.locator('#app').waitFor({state:'visible'});
     await page.locator('#nav-crew').click();
