@@ -409,6 +409,8 @@ type friendsResponse struct {
 	Incoming    []friendRequest `json:"incoming"`
 	Outgoing    []friendRequest `json:"outgoing"`
 	Leaderboard []leaderRow     `json:"leaderboard"`
+	// WeekStart is the server's Monday for the leaderboard's week_days.
+	WeekStart string `json:"week_start"`
 }
 
 // handleFriends answers the whole friends screen in one request: the roster,
@@ -429,13 +431,15 @@ func (s *server) handleFriends(w http.ResponseWriter, r *http.Request, sess *ses
 		writeError(w, http.StatusInternalServerError, "could not load sent requests")
 		return
 	}
-	board, err := s.store.leaderboard(r.Context(), sess.UserID, time.Now())
+	now := time.Now()
+	board, err := s.store.leaderboard(r.Context(), sess.UserID, now)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not load leaderboard")
 		return
 	}
 	writeJSON(w, http.StatusOK, friendsResponse{
 		Friends: friends, Incoming: incoming, Outgoing: outgoing, Leaderboard: board,
+		WeekStart: weekStart(now),
 	})
 }
 

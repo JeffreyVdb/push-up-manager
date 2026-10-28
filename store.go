@@ -753,7 +753,9 @@ type leaderRow struct {
 	Weekly   int64  `json:"weekly"`
 	Monthly  int64  `json:"monthly"`
 	AllTime  int64  `json:"all_time"`
-	Me       bool   `json:"me"`
+	// WeekDays holds one total per day from Monday through today.
+	WeekDays []int64 `json:"week_days"`
+	Me       bool    `json:"me"`
 }
 
 // leaderboard totals the signed-in user and their accepted friends over four
@@ -769,10 +771,10 @@ func (s *store) leaderboard(ctx context.Context, userID int64, today time.Time) 
 	placeholders := strings.TrimSuffix(strings.Repeat("?,", len(ids)), ",")
 	todayStr := today.Format(dateLayout)
 	// Calendar weeks start on Monday, including weeks spanning months/years.
-	weekStart := today.AddDate(0, 0, -(int(today.Weekday())+6)%7).Format(dateLayout)
+	monday := weekStart(today)
 	monthStart := time.Date(today.Year(), today.Month(), 1, 0, 0, 0, 0, today.Location()).Format(dateLayout)
 
-	args := []any{todayStr, weekStart, todayStr, monthStart, todayStr}
+	args := []any{todayStr, monday, todayStr, monthStart, todayStr}
 	for _, id := range ids {
 		args = append(args, id)
 	}
@@ -802,7 +804,59 @@ func (s *store) leaderboard(ctx context.Context, userID int64, today time.Time) 
 		row.Me = row.UserID == userID
 		board = append(board, row)
 	}
-	return board, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return board, s.fillWeekDays(ctx, board, ids, today)
+}
+
+// fillWeekDays splits each row's week into its days, Monday through today,
+// so the board can show how the week was built and not only where it stands.
+func (s *store) fillWeekDays(ctx context.Context, board []leaderRow, ids []int64, today time.Time) error {
+	elapsed := (int(today.Weekday()) + 6) % 7
+	index := map[string]int{}
+	for i := 0; i <= elapsed; i++ {
+		index[today.AddDate(0, 0, i-elapsed).Format(dateLayout)] = i
+	}
+	byUser := map[int64]int{}
+	for i := range board {
+		board[i].WeekDays = make([]int64, elapsed+1)
+		byUser[board[i].UserID] = i
+	}
+
+	placeholders := strings.TrimSuffix(strings.Repeat("?,", len(ids)), ",")
+	args := []any{today.AddDate(0, 0, -elapsed).Format(dateLayout), today.Format(dateLayout)}
+	for _, id := range ids {
+		args = append(args, id)
+	}
+	rows, err := s.db.QueryContext(ctx,
+		`SELECT user_id, day, SUM(count)
+		   FROM rep_entries
+		  WHERE day >= ? AND day <= ? AND user_id IN (`+placeholders+`)
+		  GROUP BY user_id, day`, args...)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var (
+			userID int64
+			day    string
+			total  int64
+		)
+		if err := rows.Scan(&userID, &day, &total); err != nil {
+			return err
+		}
+		if i, ok := byUser[userID]; ok {
+			board[i].WeekDays[index[day]] = total
+		}
+	}
+	return rows.Err()
+}
+
+// weekStart is the Monday that opens today's calendar week.
+func weekStart(today time.Time) string {
+	return today.AddDate(0, 0, -(int(today.Weekday())+6)%7).Format(dateLayout)
 }
 
 func requireAffected(res sql.Result) error {

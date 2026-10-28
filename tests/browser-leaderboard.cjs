@@ -20,6 +20,12 @@ const captures = process.env.PUSHUP_SCREENSHOTS;
     await page.locator('#app').waitFor({state:'visible'});
     await page.locator('#email-prompt-dismiss').click();
     await page.locator('#nav-crew').click();
+    // The board opens on the crew, and someone alone has nobody to rank.
+    await page.locator('#crew-panel').waitFor({state:'visible'});
+    await page.locator('#board-empty').waitFor({state:'visible'});
+    assert.equal(await page.locator('#global-panel').isHidden(),true);
+    assert.equal(await page.locator('#crew-race').isHidden(),true);
+    await page.locator('#scope-everyone').click();
     await page.waitForFunction(()=>document.querySelector('#leaderboard-status').textContent.startsWith('No reps'));
     const session = await (await ctx.request.get(base+'/api/session')).json();
     const types = await (await ctx.request.get(base+'/api/types')).json();
@@ -79,8 +85,50 @@ const captures = process.env.PUSHUP_SCREENSHOTS;
     await ctx.setOffline(false);
     await page.locator('#leaderboard-retry').click();
     await page.waitForFunction(()=>document.querySelectorAll('#global-board > li').length===10);
+
+    // A crew: today's strip, week lanes built from days, the race view and its memory.
+    const rival = await request.newContext();
+    const rivalName = `rival_${Date.now()}`;
+    const rivalUser = await (await rival.post(base+'/api/register',{data:{username:rivalName,password:'leaderboard-password'}})).json();
+    const rivalTypes = await (await rival.get(base+'/api/types')).json();
+    assert.equal((await add(rival,rivalUser.csrf_token,rivalTypes.types[0].id,400)).status(),201);
+    await ctx.request.post(base+'/api/friends/requests',{headers:{'X-CSRF-Token':session.csrf_token},data:{username:rivalName}});
+    const incoming = (await (await rival.get(base+'/api/friends')).json()).incoming;
+    await rival.post(base+`/api/friends/requests/${incoming[0].id}/accept`,{headers:{'X-CSRF-Token':rivalUser.csrf_token}});
+    await rival.dispose();
+    await page.reload();
+    await page.locator('#app').waitFor({state:'visible'});
+    await page.locator('#nav-crew').click();
+    await page.waitForFunction(()=>document.querySelectorAll('#lanes > li').length===2);
+    assert.equal(await page.locator('#global-panel').isHidden(),true);
+    assert.equal(await page.locator('#today-lead').textContent(),'400');
+    assert.equal(await page.locator('#today-who').textContent(),`${rivalName} owns today.`);
+    assert.equal(await page.locator('#today-gap').textContent(),'You have 325. 76 to pass.');
+    const mine = page.locator('#lanes > li.is-me');
+    assert.equal(await mine.locator('.lane-gap').textContent(),`76 to pass ${rivalName}`);
+    assert.equal(await mine.locator('.seg.is-today').count(),1);
+    assert.match(await mine.getAttribute('aria-label'),/^2\. board_\d+ \(you\), 325 push-ups this week, 75 behind/);
+    assert.equal(await page.locator('#lanes > li').first().locator('.lb-who').textContent(),rivalName);
+    await page.locator('#week-tab-race').click();
+    await page.locator('#week-race').waitFor({state:'visible'});
+    assert.equal(await page.locator('#week-lanes').isHidden(),true);
+    assert.equal(await page.locator('#race-chart .race-line').count(),2);
+    assert.equal(await page.locator('#race-standing').textContent(),`${rivalName} leads the week. 76 to pass ${rivalName}.`);
+    assert.match(await page.locator('#race-chart').getAttribute('aria-label'),new RegExp(`${rivalName} 400: (.*, )?today 400\\. board_\\d+ \\(you\\) 325: .*today 325`));
+    await page.reload();
+    await page.locator('#app').waitFor({state:'visible'});
+    await page.locator('#nav-crew').click();
+    await page.locator('#race-chart .race-line').first().waitFor();
+    assert.equal(await page.locator('#week-tab-race').getAttribute('aria-selected'),'true');
+    await page.locator('#week-tab-race').press('ArrowLeft');
+    assert.equal(await page.locator('#week-tab-lanes').getAttribute('aria-selected'),'true');
+    await page.locator('#week-lanes').waitFor({state:'visible'});
+    // Month and all time stay one tab away below the week.
+    assert.equal(await page.locator('.long-periods .ptab.is-on').textContent(),'MONTH');
+    assert.match(await page.locator('#board > li.is-me .lb-gap').textContent(),/^\+76 TO PASS$/);
+
     assert.deepEqual(errors,[]);
-    console.log('Leaderboard: seven metrics, top ten, self marker, crew isolation, selection races, both themes, mobile and connection recovery passed.');
+    console.log('Leaderboard: crew default, today strip, week lanes, race view memory, seven metrics, top ten, self marker, crew isolation, selection races, both themes, mobile and connection recovery passed.');
     await ctx.close();
   } finally { await browser.close(); }
 })().catch(error=>{console.error(error);process.exit(1)});

@@ -17,7 +17,7 @@ const state = {
   authMode: "login",
   view: "log",
   crew: { friends: [], incoming: [], outgoing: [], leaderboard: [] },
-  period: "daily",
+  period: "monthly",
 };
 
 // A confirmation can stay open through a background refresh or account change.
@@ -1414,7 +1414,7 @@ function setView(view) {
   }
   $("view-log").hidden = view !== "log";
   $("view-crew").hidden = view !== "crew";
-  if (view === "crew") loadGlobalBoard();
+  if (view === "crew" && boardScope === "everyone") loadGlobalBoard();
   syncTabRails();
   if (view !== previous) move($("view-" + view), [
     { transform: "translateY(18px)", opacity: .25 },
@@ -1445,8 +1445,11 @@ function wireTablist(selector, activate) {
 let globalBoardRequest = 0;
 let globalBoardData = null;
 let globalBoardLoading = false;
+// The board opens on the crew; Everyone is one tap away.
+let boardScope = "crew";
 
 function setBoardScope(scope) {
+  boardScope = scope;
   const everyone = scope === "everyone";
   $("global-panel").hidden = !everyone;
   $("crew-panel").hidden = everyone;
@@ -1545,9 +1548,9 @@ async function loadFriends() {
   const res = await api("GET", "/api/friends");
   state.crew = res;
   renderRequests();
-  renderBoard();
+  renderCrewBoard();
   renderCrew();
-  if (state.view === "crew") loadGlobalBoard();
+  if (state.view === "crew" && boardScope === "everyone") loadGlobalBoard();
 }
 
 // One incoming request. Nothing about it can change while it is open — it is
@@ -1713,20 +1716,12 @@ function renderBoard() {
   // nothing; the other two windows name the day and the month they cover.
   const day = parseDay(state.today || "1970-01-01");
   const scope = {
-    daily: `${MONTHS[day.getMonth()].slice(0, 3)} ${day.getDate()}`.toUpperCase(),
-    weekly: weekLabel(state.today),
     monthly: MONTHS[day.getMonth()].toUpperCase(),
     all_time: "",
   };
   $("board-window").textContent = scope[key] || "";
 
   const board = $("board");
-  // One row is not a ranking. Crowning someone #1 for a total of zero is the
-  // congratulation for the minimum the product exists to refuse.
-  const alone = rows.length <= 1;
-  board.hidden = alone;
-  $("board-empty").hidden = !alone;
-  if (alone) { board.replaceChildren(); return; }
 
   // Writing a value it already holds changes nothing and starts no transition,
   // which is what makes an unchanged re-render completely still.
@@ -1736,13 +1731,13 @@ function renderBoard() {
     const [who, you, gap] = name.children;
     const ahead = i > 0 ? rows[i - 1][key] - row[key] : 0;
 
-    setText(rank, String(i + 1));
+    setText(rank, String(sharedRank(rows, key, i)));
     setText(who, row.username);
     setHidden(you, !row.me);
     setHidden(gap, !(i > 0 && ahead > 0));
     // Cleared when hidden as well, or a row promoted to first keeps the text
     // saying who it is still chasing.
-    setText(gap, gap.hidden ? "" : `+${ahead} TO PASS`);
+    setText(gap, gap.hidden ? "" : `+${ahead + 1} TO PASS`);
     setNumber(num, row[key]);
 
     li.classList.toggle("is-me", row.me);
@@ -1753,7 +1748,7 @@ function renderBoard() {
 
     const behind = i > 0 && ahead > 0 ? `, ${ahead} behind ${rows[i - 1].username}` : "";
     setAttr(li, "aria-label",
-      `${i + 1}. ${row.username}${row.me ? " (you)" : ""}, ${row[key]} push-ups${behind}`);
+      `${sharedRank(rows, key, i)}. ${row.username}${row.me ? " (you)" : ""}, ${row[key]} push-ups${behind}`);
   };
 
   const kept = new Map();
@@ -1798,6 +1793,329 @@ function weekLabel(today) {
     ? String(end.getDate())
     : `${MONTHS[end.getMonth()].slice(0, 3)} ${end.getDate()}`;
   return `${first} – ${last}`.toUpperCase();
+}
+
+/* ---------------------------------------------------------- crew race */
+
+const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const WEEK_VIEW_KEY = "pushup-counter:week-view";
+
+// Monday through today, from the server; a row from an older server falls
+// back to today alone rather than inventing the days before it.
+function weekDays(row) {
+  return Array.isArray(row.week_days) && row.week_days.length ? row.week_days : [row.daily];
+}
+
+function joinNames(names) {
+  if (names.length <= 2) return names.join(" and ");
+  return `${names[0]} and ${names.length - 1} others`;
+}
+
+// Equal scores share a rank, as on the Everyone board: 1, 1, 3.
+function sharedRank(rows, key, i) {
+  let rank = i;
+  while (rank > 0 && rows[rank - 1][key] === rows[i][key]) rank--;
+  return rank + 1;
+}
+
+// Your place in the week, in words: the gap to the person directly ahead, or
+// your lead over the person behind.
+function weekStanding(rows) {
+  const i = rows.findIndex((r) => r.me);
+  const me = rows[i];
+  const peak = rows[0].weekly;
+  if (peak === 0) return "";
+  const above = rows.slice(0, i).reverse().find((r) => r.weekly > me.weekly);
+  if (above) return `${above.weekly - me.weekly + 1} to pass ${above.username}`;
+  const tied = rows.find((r) => !r.me && r.weekly === me.weekly);
+  if (tied) return `Tied with ${tied.username}. One rep takes it.`;
+  const next = rows.find((r) => !r.me);
+  return next ? `${me.weekly - next.weekly} ahead of ${next.username}` : "";
+}
+
+// One row is not a ranking. Crowning someone #1 for a total of zero is the
+// congratulation for the minimum the product exists to refuse.
+function renderCrewBoard() {
+  const alone = state.crew.leaderboard.length <= 1;
+  setHidden($("crew-race"), alone);
+  setHidden($("board-empty"), !alone);
+  if (alone) {
+    $("lanes").replaceChildren();
+    $("board").replaceChildren();
+    raceKey = "";
+    return;
+  }
+  setText($("week-window"), weekLabel(state.crew.week_start || state.today));
+  renderToday();
+  renderLanes();
+  renderRace();
+  renderBoard();
+}
+
+// Who owns today, and what it takes to pass them, in one line.
+function renderToday() {
+  const rows = [...state.crew.leaderboard].sort(
+    (a, b) => b.daily - a.daily || a.username.localeCompare(b.username)
+  );
+  const peak = rows[0].daily;
+  const me = rows.find((r) => r.me);
+  const leaders = rows.filter((r) => r.daily === peak);
+  let who;
+  let gap;
+  if (peak === 0) {
+    who = "Nobody has logged today.";
+    gap = "The first set takes it.";
+  } else if (leaders.includes(me)) {
+    const others = leaders.filter((r) => !r.me).map((r) => r.username);
+    if (others.length) {
+      who = `You share today with ${joinNames(others)}.`;
+      gap = "One rep takes it.";
+    } else {
+      const next = rows.find((r) => !r.me);
+      who = "You own today.";
+      gap = next.daily > 0 ? `${peak - next.daily} ahead of ${next.username}.` : "Nobody else has logged.";
+    }
+  } else {
+    who = `${joinNames(leaders.map((r) => r.username))} ${leaders.length > 1 ? "share" : "owns"} today.`;
+    gap = `You have ${me.daily}. ${peak - me.daily + 1} to pass.`;
+  }
+  setNumber($("today-lead"), peak);
+  setText($("today-who"), who);
+  setText($("today-gap"), gap);
+}
+
+// One lane per person, ranked by the week. The lane is built from its days,
+// so today's push reads as the last block.
+function buildLane(userID) {
+  const li = document.createElement("li");
+  li.className = "lane-row";
+  li.dataset.userId = String(userID);
+  li.innerHTML =
+    '<span class="lb-rank tnum"></span>' +
+    '<span class="lane-name"><span class="lb-who"></span><span class="lb-you" hidden>YOU</span></span>' +
+    '<span class="lane-today tnum"></span>' +
+    '<span class="lb-num tnum"></span>' +
+    '<span class="lane-track"><span class="lane-fill"></span></span>' +
+    '<span class="lane-gap" hidden></span>';
+  return li;
+}
+
+function renderLanes() {
+  const rows = [...state.crew.leaderboard].sort(
+    (a, b) => b.weekly - a.weekly || a.username.localeCompare(b.username)
+  );
+  const peak = rows[0].weekly;
+  const list = $("lanes");
+
+  const fill = (li, i) => {
+    const row = rows[i];
+    const [rank, name, today, num, track, gapLine] = li.children;
+    const [who, you] = name.children;
+    setText(rank, String(sharedRank(rows, "weekly", i)));
+    setText(who, row.username);
+    setHidden(you, !row.me);
+    setText(today, `+${row.daily} today`);
+    today.classList.toggle("is-zero", row.daily === 0);
+    setNumber(num, row.weekly);
+    li.classList.toggle("is-me", row.me);
+    li.classList.toggle("is-top", peak > 0 && row.weekly === peak);
+
+    // Your row says what the week takes; everybody else's number already does.
+    const gap = row.me ? weekStanding(rows) : "";
+    setHidden(gapLine, !gap);
+    setText(gapLine, gap);
+
+    // A non-zero week always keeps a visible sliver of lane.
+    const share = peak > 0 ? Math.max(row.weekly > 0 ? 2 : 0, (row.weekly / peak) * 100) : 0;
+    const bar = track.firstChild;
+    bar.style.setProperty("--share", `${share.toFixed(2)}%`);
+    const days = weekDays(row);
+    const last = days.length - 1;
+    // Empty days get no segment, or their gap would still take room. The
+    // segments are rebuilt only when a day gains its first rep; otherwise each
+    // one grows in place.
+    const shape = days.map((n, d) => (n > 0 ? String(d) : "")).filter(Boolean).join(",");
+    if (bar.dataset.shape !== shape) {
+      bar.dataset.shape = shape;
+      bar.replaceChildren(...days.flatMap((n, d) => {
+        if (n <= 0) return [];
+        const seg = document.createElement("span");
+        seg.className = d === last ? "seg is-today" : d % 2 ? "seg is-odd" : "seg";
+        seg.dataset.day = String(d);
+        return [seg];
+      }));
+    }
+    for (const seg of bar.children) {
+      const grow = String(days[Number(seg.dataset.day)]);
+      if (seg.style.flexGrow !== grow) seg.style.flexGrow = grow;
+    }
+
+    const behind = i > 0 && rows[i - 1].weekly > row.weekly
+      ? `, ${rows[i - 1].weekly - row.weekly} behind ${rows[i - 1].username}` : "";
+    const split = days.map((n, d) => `${d === last ? "today" : WEEK_DAYS[d]} ${n}`).join(", ");
+    setAttr(li, "aria-label",
+      `${sharedRank(rows, "weekly", i)}. ${row.username}${row.me ? " (you)" : ""}, ${row.weekly} push-ups this week${behind}. ${split}.`);
+  };
+
+  const kept = new Map();
+  for (const li of list.children) kept.set(Number(li.dataset.userId), li);
+  const order = rows.map((row, i) => {
+    const li = kept.get(row.user_id);
+    if (li) return li;
+    const fresh = buildLane(row.user_id);
+    fill(fresh, i);
+    fresh.classList.add("is-new");
+    fresh.addEventListener("animationend", () => fresh.classList.remove("is-new"), { once: true });
+    return fresh;
+  });
+  const from = new Map();
+  for (const li of order) if (li.isConnected) from.set(li, li.getBoundingClientRect().top);
+  const live = new Set(order);
+  for (const li of [...list.children]) if (!live.has(li)) li.remove();
+  for (const [i, li] of order.entries()) {
+    if (list.children[i] !== li) list.insertBefore(li, list.children[i] || null);
+  }
+  for (const li of order) slideIntoPlace(li, from.get(li));
+  for (const [i, li] of order.entries()) if (from.has(li)) fill(li, i);
+}
+
+// The week as a race: each person's running total from Monday. Redrawn only
+// when the numbers change, so an unchanged refresh leaves it still.
+let raceKey = "";
+
+function niceStep(raw) {
+  const mag = 10 ** Math.floor(Math.log10(Math.max(raw, 1)));
+  for (const m of [1, 2, 2.5, 5, 10]) if (m * mag >= raw) return m * mag;
+  return 10 * mag;
+}
+
+function renderRace() {
+  const svg = $("race-chart");
+  if ($("week-race").hidden || state.crew.leaderboard.length <= 1) return;
+  const rows = [...state.crew.leaderboard].sort(
+    (a, b) => b.weekly - a.weekly || a.username.localeCompare(b.username)
+  );
+  // The lanes carry your gap; this view says it too, above the chart.
+  const leaders = rows.filter((r) => r.weekly === rows[0].weekly && rows[0].weekly > 0);
+  const standing = weekStanding(rows);
+  const head = !leaders.length ? "Nobody has logged this week."
+    : leaders.some((r) => r.me) ? (leaders.length > 1 ? "You share the lead." : "You lead the week.")
+    : `${joinNames(leaders.map((r) => r.username))} ${leaders.length > 1 ? "share" : "leads"} the week.`;
+  const line = $("race-standing");
+  if (line.dataset.text !== `${head}|${standing}`) {
+    line.dataset.text = `${head}|${standing}`;
+    const strong = document.createElement("strong");
+    strong.textContent = standing ? `${standing}.`.replace(/\.\.$/, ".") : "";
+    line.replaceChildren(`${head} `, strong);
+  }
+
+  // Drawn at its own pixel width, so type stays the same size on a phone and
+  // on a desktop instead of scaling up with the chart.
+  const W = Math.max(280, Math.round(svg.clientWidth) || 340);
+  const data = JSON.stringify(rows.map((r) => [r.user_id, r.username, weekDays(r)]));
+  const key = `${W}|${data}`;
+  if (key === raceKey) return;
+  const changed = !raceKey.endsWith(`|${data}`);
+  raceKey = key;
+
+  const NS = "http://www.w3.org/2000/svg";
+  const H = 196, left = 34, top = 14, bottom = 166;
+  setAttr(svg, "viewBox", `0 0 ${W} ${H}`);
+  const today = weekDays(rows[0]).length - 1;
+  // Long usernames are cut short here; the label below carries them whole.
+  const cut = W < 340 ? 7 : 12;
+  const short = (name) => (name.length > cut ? `${name.slice(0, cut - 1)}…` : name);
+  const nameOf = (r) => `${r.me ? "you" : short(r.username)} ${r.weekly}`;
+  // Names sit at the end of their lines. Late in the week the days narrow so
+  // the longest name still fits beside today's point.
+  const labelWidth = Math.max(...rows.map((r) => nameOf(r).length)) * 6.8 + 10;
+  const step = Math.min((W - 16 - left) / 6, today ? (W - labelWidth - left) / today : Infinity);
+  const x = (d) => left + d * step;
+  const right = x(6);
+  const peak = Math.max(10, ...rows.map((r) => r.weekly));
+  const tick = niceStep(peak / 3);
+  const ceiling = tick * Math.ceil(peak / tick);
+  const y = (v) => bottom - (v / ceiling) * (bottom - top);
+  const el = (name, attrs, text) => {
+    const node = document.createElementNS(NS, name);
+    for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, String(v));
+    if (text !== undefined) node.textContent = text;
+    return node;
+  };
+
+  const parts = [el("rect", { class: "race-today", x: x(today) - step / 2, y: top - 8, width: step, height: bottom - top + 8, rx: 6 })];
+  for (let v = tick; v <= ceiling; v += tick) {
+    parts.push(el("line", { class: "race-grid", x1: left, x2: right, y1: y(v), y2: y(v) }));
+    parts.push(el("text", { class: "race-axis", x: left - 8, y: y(v) + 4, "text-anchor": "end" }, String(v)));
+  }
+  parts.push(el("line", { class: "race-base", x1: left, x2: right, y1: bottom, y2: bottom }));
+  for (let d = today + 1; d < 7; d++) {
+    parts.push(el("line", { class: "race-ahead", x1: x(d), x2: x(d), y1: top, y2: bottom }));
+  }
+  // Narrow days drop to initials, today included, so no two labels touch.
+  const narrow = step < 38;
+  for (let d = 0; d < 7; d++) {
+    const label = narrow ? WEEK_DAYS[d][0] : d === today ? "Today" : WEEK_DAYS[d];
+    parts.push(el("text", { class: d === today ? "race-day is-today" : "race-day", x: x(d), y: H - 10, "text-anchor": "middle" }, label));
+  }
+
+  // Everyone else first, the week leader over them, you on top.
+  const lead = rows[0].weekly;
+  const role = (r) => (r.me ? "is-me" : lead > 0 && r.weekly === lead ? "is-lead" : "");
+  const layer = (r) => (r.me ? 2 : role(r) ? 1 : 0);
+  const ends = [];
+  for (const r of [...rows].sort((a, b) => layer(a) - layer(b))) {
+    let run = 0;
+    const points = weekDays(r).map((n, d) => { run += n; return `${x(d).toFixed(1)},${y(run).toFixed(1)}`; });
+    if (points.length === 1) points.unshift(`${(x(0) - 0.01).toFixed(2)},${y(run).toFixed(1)}`);
+    parts.push(el("polyline", { class: `race-line ${role(r)}`, points: points.join(" ") }));
+    ends.push({ row: r, y: y(r.weekly) });
+  }
+  const me = rows.find((r) => r.me);
+  parts.push(el("circle", { class: "race-dot", cx: x(today), cy: y(me.weekly), r: 5 }));
+
+  // Nudge close totals apart so no two names overlap, keeping each as near
+  // its own line as the stack allows.
+  ends.sort((a, b) => a.y - b.y || b.row.weekly - a.row.weekly);
+  const spacing = 15;
+  let floor = top - 2;
+  for (const end of ends) { end.ly = Math.max(end.y + 4, floor); floor = end.ly + spacing; }
+  let ceilingY = bottom + 4;
+  for (let i = ends.length - 1; i >= 0; i--) {
+    ends[i].ly = Math.min(ends[i].ly, ceilingY);
+    ceilingY = ends[i].ly - spacing;
+  }
+  for (const end of ends) {
+    parts.push(el("text", { class: `race-name ${role(end.row)}`, x: x(today) + 10, y: end.ly }, nameOf(end.row)));
+  }
+  svg.replaceChildren(...parts);
+  // The lanes, and their numbers, are hidden behind this view, so the label
+  // carries every day as well as every total.
+  setAttr(svg, "aria-label", `Running totals this week. ` + rows.map((r) => {
+    const days = weekDays(r).map((n, d) => `${d === today ? "today" : WEEK_DAYS[d]} ${n}`).join(", ");
+    return `${r.username}${r.me ? " (you)" : ""} ${r.weekly}: ${days}`;
+  }).join(". ") + ".");
+  if (changed) move(svg, [{ opacity: .4 }, { opacity: 1 }], 340);
+}
+
+function savedWeekView() {
+  try { return localStorage.getItem(WEEK_VIEW_KEY) === "race" ? "race" : "lanes"; } catch { return "lanes"; }
+}
+
+function setWeekView(view, remember) {
+  for (const tab of document.querySelectorAll(".week-views .ptab")) {
+    const on = tab.dataset.weekView === view;
+    tab.classList.toggle("is-on", on);
+    tab.setAttribute("aria-selected", String(on));
+    tab.tabIndex = on ? 0 : -1;
+    if (on) moveTabRail(tab);
+  }
+  $("week-lanes").hidden = view !== "lanes";
+  $("week-race").hidden = view !== "race";
+  if (view === "race" && state.crew.leaderboard.length > 1) renderRace();
+  if (remember) {
+    try { localStorage.setItem(WEEK_VIEW_KEY, view); } catch { /* Remembered for this visit only. */ }
+  }
 }
 
 // One crew member. A username never changes, so only the total is written.
@@ -2084,6 +2402,7 @@ async function enterApp() {
   globalBoardData = null;
   globalBoardLoading = false;
   $("global-board").replaceChildren();
+  setBoardScope("crew");
   $("gate").hidden = true;
   $("app").hidden = false;
   $("startup").hidden = true;
@@ -2183,6 +2502,7 @@ function wire() {
   $("cal-prev").addEventListener("click", () => shiftMonth(-1));
   $("cal-next").addEventListener("click", () => shiftMonth(1));
   calendarSwipe = setupCalendarSwipe();
+  new ResizeObserver(() => renderRace()).observe($("race-chart"));
   $("day-today").addEventListener("click", () => loadDay(state.today).catch((e) => toast(e.message)));
 
   $("scope-everyone").addEventListener("click", () => setBoardScope("everyone"));
@@ -2190,9 +2510,11 @@ function wire() {
   $("leaderboard-metric").addEventListener("change", () => loadGlobalBoard(true));
   $("leaderboard-retry").addEventListener("click", () => loadGlobalBoard(true));
   wireTablist(".vtab", (tab) => setView(tab.dataset.view));
-  wireTablist(".ptab", (tab) => {
+  wireTablist(".week-views .ptab", (tab) => setWeekView(tab.dataset.weekView, true));
+  setWeekView(savedWeekView(), false);
+  wireTablist(".long-periods .ptab", (tab) => {
     state.period = tab.dataset.period;
-    for (const other of document.querySelectorAll(".ptab")) {
+    for (const other of document.querySelectorAll(".long-periods .ptab")) {
       const on = other === tab;
       other.classList.toggle("is-on", on);
       other.setAttribute("aria-selected", String(on));

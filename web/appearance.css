@@ -29,6 +29,7 @@
   --heat-3: #b9d386;
   --heat-4: #e2f1ac;
   --heat-ink: #0d1a0a;
+  --race-lead: var(--heat-1);
   --heat-wash: rgb(226 241 172 / .4);
   --heat-lift: rgb(0 0 0 / .6);
   --petal: #29232f;
@@ -71,6 +72,7 @@
   font: inherit;
   font-size: 1rem;
 }
+:root[data-theme="plant"][data-mode="dark"] .week-views .ptab.is-on { box-shadow: 0 1px 3px rgb(0 0 0 / .5); }
 :where([data-theme="plant"]) #color-mode { border-radius: 8px; }
 .release-notes > .hint { margin: .5rem 0 1.5rem; }
 .release-entry { margin-bottom: 1.5rem; }

@@ -1239,6 +1239,102 @@ input:focus-visible { border-color: var(--signal); outline-offset: 0; }
 #global-board .lb-who { white-space: normal; overflow: visible; }
 #global-board .lb-num { white-space: nowrap; }
 #global-board .lb-unit { font: 400 .75rem var(--text); color: var(--ash); display: block; margin-top: .3rem; text-align: right; }
+/* The crew race: today in one strip, the week as lanes built from its days.
+   Classic reads today in signal on slab; the plant theme swaps in its own
+   selected-day pairing. */
+:root {
+  --today-ground: var(--slab-2);
+  --today-ink: var(--signal);
+  --today-muted: var(--ash);
+  --lane-a: var(--heat-1);
+  --lane-b: var(--heat-2);
+  --race-lead: var(--bone);
+  --race-other: var(--control-rule);
+}
+.today-strip {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 1rem;
+  margin: 0 0 1.5rem;
+  padding: .875rem 1rem;
+  background: var(--today-ground);
+  color: var(--today-muted);
+  font-size: .875rem;
+  line-height: 1.4;
+}
+.today-lead {
+  display: inline-block;
+  min-width: 2ch;
+  font-family: var(--display);
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--today-ink);
+}
+.today-copy strong { display: block; font-size: 1rem; color: var(--today-ink); }
+.week-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .25rem 1rem; }
+.week-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.week-head .board-window { margin-left: 0; }
+.week-views { margin: .5rem 0 .25rem; }
+.week-key { display: flex; gap: 1rem; margin: .75rem 0 .25rem; font-size: .75rem; font-weight: 600; color: var(--ash); }
+.week-key i { display: inline-block; width: 10px; height: 10px; margin-right: .375rem; vertical-align: -1px; }
+.key-earlier { background: linear-gradient(90deg, var(--lane-a) 50%, var(--lane-b) 50%); }
+.key-today { background: var(--today-ink); }
+.lane-row {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto auto;
+  align-items: baseline;
+  column-gap: .75rem;
+  row-gap: .5rem;
+  padding: .75rem 0 .875rem;
+  border-bottom: 1px solid var(--rule);
+  scroll-margin-bottom: 12rem;
+}
+.lane-row:last-child { border-bottom: 0; }
+.lane-row.is-top .lb-rank { color: var(--signal); }
+.lane-name { display: flex; align-items: baseline; gap: .5rem; min-width: 0; font-size: .9375rem; font-weight: 600; }
+.lane-row.is-me .lane-name { font-weight: 800; }
+.lane-today { font-size: .8125rem; font-weight: 700; color: var(--today-ink); white-space: nowrap; }
+.lane-today.is-zero { color: var(--ash); }
+.lane-track { grid-column: 2 / -1; height: 14px; background: var(--slab-2); }
+.lane-row.is-me .lane-track { outline: 2px solid var(--signal); outline-offset: 2px; }
+/* Width carries the comparison, the printed totals carry the values. A
+   changed week travels to its new length; an unchanged one is not written. */
+.lane-fill { display: flex; gap: 2px; height: 100%; width: var(--share, 0%); transition: width .42s var(--ease); }
+.lane-row.is-new .lane-fill { animation: lane-grow .42s var(--ease); }
+.seg { flex: 1 1 0; min-width: 2px; background: var(--lane-a); transition: flex-grow .42s var(--ease); }
+.seg.is-odd { background: var(--lane-b); }
+.seg.is-today { background: var(--today-ink); }
+.lane-gap { grid-column: 2 / -1; font-size: .75rem; font-weight: 700; color: var(--signal); }
+@keyframes lane-grow { from { width: 0; } }
+.race-chart { display: block; width: 100%; height: auto; margin-top: .75rem; }
+.race-standing { margin: .75rem 0 0; font-size: .875rem; color: var(--ash); }
+.race-standing strong { color: var(--signal); font-weight: 700; }
+.race-today { fill: var(--today-ground); }
+.race-grid { stroke: var(--slab-2); }
+.race-base { stroke: var(--rule); }
+.race-ahead { stroke: var(--rule); stroke-dasharray: 2 4; }
+.race-axis, .race-day { font: 600 11px var(--text); fill: var(--ash); }
+.race-day.is-today { fill: var(--today-ink); font-weight: 800; }
+.race-line { fill: none; stroke: var(--race-other); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.race-line.is-lead { stroke: var(--race-lead); stroke-width: 2.5; }
+.race-line.is-me { stroke: var(--signal); stroke-width: 4; }
+.race-dot { fill: var(--signal); stroke: var(--slab); stroke-width: 2; }
+.race-name { font: 700 12px var(--text); fill: var(--ash); }
+.race-name.is-lead { fill: var(--bone); }
+.race-name.is-me { fill: var(--signal); }
+.long { margin-top: 2.25rem; }
+.long .board-head { align-items: baseline; }
+@media (prefers-reduced-motion: reduce) {
+  .lane-fill, .seg { transition: none; }
+}
 :where([data-theme="plant"]) .board-scopes [aria-pressed="true"] { color: var(--on-signal); }
 :where([data-theme="plant"]) #leaderboard-metric { border-radius: 8px; }
 @media (max-width: 359px) {

@@ -276,13 +276,13 @@
     <!-- Leaderboard -->
     <section class="band" aria-labelledby="h-board">
       <div class="band-head board-head">
-        <h2 id="h-board" class="band-title">THE BOARD</h2>
+        <h2 id="h-board" class="band-title"><span class="classic-only">THE BOARD</span><span class="plant-only">The board</span></h2>
         <div class="board-scopes" role="group" aria-label="Leaderboard audience">
-          <button id="scope-everyone" class="btn btn-outline" type="button" aria-pressed="true">Everyone</button>
-          <button id="scope-crew" class="btn btn-outline" type="button" aria-pressed="false">My crew</button>
+          <button id="scope-crew" class="btn btn-outline" type="button" aria-pressed="true">Crew</button>
+          <button id="scope-everyone" class="btn btn-outline" type="button" aria-pressed="false">Everyone</button>
         </div>
       </div>
-      <div id="global-panel">
+      <div id="global-panel" hidden>
         <label class="field" for="leaderboard-metric">
           <span>Top 10 across the app</span>
           <select id="leaderboard-metric" aria-describedby="leaderboard-description">
@@ -301,17 +301,47 @@
         <ol id="global-board" class="board" aria-label="Top 10 across the app"></ol>
         <p class="leaderboard-note leaderboard-rules">Logged reps only. Equal scores share a rank; ties are ordered by username. Records use the server’s calendar.</p>
       </div>
-      <div id="crew-panel" hidden>
-      <div class="band-head board-head">
-        <span id="board-window" class="board-window"></span>
-        <div class="periods" role="tablist" aria-label="Leaderboard window">
-          <button class="ptab is-on" type="button" role="tab" data-period="daily" aria-selected="true">TODAY</button>
-          <button class="ptab" type="button" role="tab" data-period="weekly" aria-selected="false">WEEK</button>
-          <button class="ptab" type="button" role="tab" data-period="monthly" aria-selected="false">MONTH</button>
-          <button class="ptab" type="button" role="tab" data-period="all_time" aria-selected="false">ALL TIME</button>
-        </div>
+      <div id="crew-panel">
+      <div id="crew-race">
+        <!-- Today's race in one line: who owns it and what it takes to pass. -->
+        <p id="today-strip" class="today-strip">
+          <span id="today-lead" class="today-lead tnum">0</span>
+          <span class="today-copy"><strong id="today-who"></strong> <span id="today-gap"></span></span>
+        </p>
+
+        <section class="week" aria-labelledby="h-week">
+          <div class="week-head">
+            <h3 id="h-week" class="week-title">This week</h3>
+            <span id="week-window" class="board-window"></span>
+          </div>
+          <div class="periods week-views" role="tablist" aria-label="Week view">
+            <button id="week-tab-lanes" class="ptab is-on" type="button" role="tab" data-week-view="lanes"
+                    aria-selected="true" aria-controls="week-lanes">Lanes</button>
+            <button id="week-tab-race" class="ptab" type="button" role="tab" data-week-view="race"
+                    aria-selected="false" aria-controls="week-race" tabindex="-1">Race</button>
+          </div>
+          <div id="week-lanes" role="tabpanel" aria-labelledby="week-tab-lanes">
+            <p class="week-key" aria-hidden="true"><span><i class="key-earlier"></i>Earlier days</span><span><i class="key-today"></i>Today</span></p>
+            <ol id="lanes" class="board lanes" aria-label="This week, ranked"></ol>
+          </div>
+          <div id="week-race" role="tabpanel" aria-labelledby="week-tab-race" hidden>
+            <p id="race-standing" class="race-standing"></p>
+            <svg id="race-chart" class="race-chart" role="img" viewBox="0 0 340 196"></svg>
+          </div>
+        </section>
+
+        <section class="long" aria-labelledby="h-long">
+          <div class="band-head board-head">
+            <h3 id="h-long" class="week-title">Long game</h3>
+            <span id="board-window" class="board-window"></span>
+            <div class="periods long-periods" role="tablist" aria-label="Longer window">
+              <button class="ptab is-on" type="button" role="tab" data-period="monthly" aria-selected="true">MONTH</button>
+              <button class="ptab" type="button" role="tab" data-period="all_time" aria-selected="false" tabindex="-1">ALL TIME</button>
+            </div>
+          </div>
+          <ol id="board" class="board"></ol>
+        </section>
       </div>
-      <ol id="board" class="board"></ol>
       <p id="board-empty" class="empty" hidden><span class="classic-only">NOBODY TO BEAT. ADD SOMEONE BELOW.</span><span class="plant-only">NOBODY TO BEAT. ADD SOMEONE TO YOUR CREW.</span></p>
       </div>
     </section>

@@ -435,7 +435,55 @@ func TestLeaderboardCalendarWeekBoundaries(t *testing.T) {
 			if len(rows) != 1 || rows[0].Weekly != want || rows[0].Daily != 1 {
 				t.Fatalf("want weekly %d and daily 1, got %+v", want, rows)
 			}
+			// One entry per day from Monday through today, adding up to the week.
+			days := rows[0].WeekDays
+			if int64(len(days)) != want {
+				t.Fatalf("want %d week days, got %v", want, days)
+			}
+			var sum int64
+			for _, n := range days {
+				if n != 1 {
+					t.Fatalf("want one rep on every day so far, got %v", days)
+				}
+				sum += n
+			}
+			if sum != rows[0].Weekly || days[len(days)-1] != rows[0].Daily {
+				t.Fatalf("week days %v disagree with weekly %d / daily %d", days, rows[0].Weekly, rows[0].Daily)
+			}
 		})
+	}
+}
+
+func TestLeaderboardWeekDaysForIdleFriend(t *testing.T) {
+	srv, _ := newTestServer(t)
+	alice := newClient(t, srv)
+	alice.register("alice", "hunter2hunter2")
+	bob := newClient(t, srv)
+	bob.register("bob", "hunter2hunter2")
+	alice.requestFriend("bob")
+	bob.do("POST", "/api/friends/requests/"+itoa(bob.incomingID("alice"))+"/accept", nil)
+	alice.do("POST", "/api/reps", map[string]any{"type_id": alice.typeID("Standard"), "count": 12})
+
+	payload := alice.friendsPayload()
+	today := time.Now()
+	weekStart := today.AddDate(0, 0, -(int(today.Weekday())+6)%7).Format(dateLayout)
+	if payload["week_start"] != weekStart {
+		t.Errorf("week_start = %v, want %s", payload["week_start"], weekStart)
+	}
+	want := (int(today.Weekday())+6)%7 + 1
+	for _, raw := range payload["leaderboard"].([]any) {
+		row := raw.(map[string]any)
+		days, ok := row["week_days"].([]any)
+		if !ok || len(days) != want {
+			t.Fatalf("%s: want %d week days, got %v", row["username"], want, row["week_days"])
+		}
+		last := days[len(days)-1].(float64)
+		if row["username"] == "bob" && last != 0 {
+			t.Errorf("an idle friend should have zero today, got %v", days)
+		}
+		if row["username"] == "alice" && last != 12 {
+			t.Errorf("alice should have 12 today, got %v", days)
+		}
 	}
 }
 

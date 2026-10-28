@@ -304,6 +304,27 @@
 :where([data-theme="plant"]) .lb-bar { border-radius: 6px; }
 :where([data-theme="plant"]) .lb-num { font-weight: 500; }
 :where([data-theme="plant"]) .lb-gap { letter-spacing: 0; font-size: .625rem; }
+/* Today keeps the selected day's lavender and plum; earlier days grow in leaf. */
+:root[data-theme="plant"] {
+  --today-ground: var(--petal);
+  --today-ink: var(--plum);
+  --today-muted: var(--day-muted);
+  --lane-a: var(--heat-4);
+  --lane-b: var(--heat-3);
+  --race-lead: var(--heat-3);
+  --race-other: var(--rule);
+}
+:where([data-theme="plant"]) .today-strip { border-radius: 12px; }
+:where([data-theme="plant"]) .today-lead { font-weight: 500; }
+:where([data-theme="plant"]) .today-copy strong { font-weight: 600; }
+:where([data-theme="plant"]) .week-title { font-weight: 500; text-transform: none; letter-spacing: -.01em; }
+:where([data-theme="plant"]) .week-views { padding: 3px; background: var(--slab-2); border-radius: 10px; gap: 0; }
+:where([data-theme="plant"]) .week-views .ptab { min-height: 48px; border: 0; border-radius: 8px; color: var(--ash); font-size: .875rem; letter-spacing: 0; text-transform: none; }
+:where([data-theme="plant"]) .week-views .ptab.is-on { background: var(--slab); color: var(--bone); box-shadow: 0 1px 3px rgb(32 61 46 / .18); }
+:where([data-theme="plant"]) .week-views.has-rail::after { display: none; }
+:where([data-theme="plant"]) .week-key i { border-radius: 3px; }
+:where([data-theme="plant"]) .lane-track { border-radius: 7px; overflow: hidden; }
+:where([data-theme="plant"]) .lane-row .lb-num { font-weight: 500; }
 :where([data-theme="plant"]) .requests { border-top: 0; background: var(--slab-2); }
 :where([data-theme="plant"]) .req-title,
 :where([data-theme="plant"]) .reqlist { max-width: 72rem; }
@@ -364,7 +385,12 @@
   :where([data-theme="plant"]) .picker-panel { border-radius: 0; }
   :where([data-theme="plant"]) #view-crew { display: flex; flex-direction: column; gap: 2rem; }
   :where([data-theme="plant"]) #view-crew > .band { width: 100%; }
-  :where([data-theme="plant"]) #view-crew > .band:first-child { padding: 1.25rem; }
+  :where([data-theme="plant"]) #view-crew > .band:first-child { padding: 1.25rem 1rem; }
+  /* The title and its scope buttons share a row, as on desktop. */
+  :where([data-theme="plant"]) #view-crew .board-head { align-items: center; gap: .75rem; }
+  :where([data-theme="plant"]) #view-crew .board-head .band-title { font-size: 1.5rem; padding-bottom: 0; }
+  :where([data-theme="plant"]) .board-scopes { gap: .375rem; }
+  :where([data-theme="plant"]) .board-scopes .btn { padding-inline: .75rem; letter-spacing: .02em; }
 }
 @media (max-width: 359px) {
   :where([data-theme="plant"]) .topbar { gap: .25rem; padding-inline: .5rem; }
